@@ -17,6 +17,12 @@ class ball{
     }
 }
 
+var balls = [];
+
+function newBall(config, x, y, dx, dy) {
+    balls.push(new ball(config.radius, x, y, dx*config.speed, dy*config.speed))
+}
+
 function drawBall(ball) {
     ctx.beginPath();
     ctx.arc(ball.x, ball.y, ball.radius, 0, Math.PI*2);
