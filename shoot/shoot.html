@@ -17,40 +17,28 @@
 <script src="square.js"></script>
 <script src="ball.js"></script>
 <script src="joystick.js"></script>
+<script src="config.json"></script>
+
 <script>
 var canvas = document.getElementById("myCanvas");
 canvas.width = window.innerWidth;
 canvas.height = window.innerHeight;
 var ctx = canvas.getContext("2d");
 
-var hero = new square( 20, 20, "#AA95DD", (canvas.width-20)/2, (canvas.height-20)/2, 2, 2);
-var button = new square(30, 50, "#ff5500", canvas.width-50, 0, 0, 0);
-var gamepad = new joystick(100,50,"#AA95DD", "#ff5500", 150, canvas.height-150);
-var balls = [];
+var x, y, bool = canvas.height<canvas.width;
+x = canvas.width;
+y = canvas.height;
+var hero = initSquare(x, y, config.hero, bool);
+var button = initSquare(x, y, config.pause, bool);
+var gamepad = initJoystick(x, y, config.joystick, bool);
+var shooter = initJoystick(x,y, config.shooter, bool);
+
 var squares = [
     hero,
     button
 ];
 
-var int1 = setInterval(draw, 10);
-
-function newBall(radius, x, y, dx, dy) {
-    balls.push(new ball(radius, x, y, dx, dy))
-}
-
-function drawJoystick(joystick){
-    ctx.beginPath();
-    ctx.arc(joystick.x, joystick.y, joystick.radiusExt, 0, Math.PI*2);
-    ctx.fillStyle = joystick.colorExt;
-    ctx.fill();
-    ctx.closePath();
-
-    ctx.beginPath();
-    ctx.arc(joystick.xInt, joystick.yInt, joystick.radiusInt, 0, Math.PI*2);
-    ctx.fillStyle = joystick.colorInt;
-    ctx.fill();
-    ctx.closePath();
-}
+var intDraw = setInterval(draw, 10);
 
 function draw() {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
@@ -64,6 +52,7 @@ function draw() {
         drawSquare(square);
     });
     drawJoystick(gamepad);
+    drawJoystick(shooter);
 }
 </script>
     
