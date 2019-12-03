@@ -37,16 +37,15 @@ class joystick{
 }
 
 function initJoystick(x, y, config, orientation = true){
-    var radiusExt = y/config.radiusExt;
-    var radiusInt = y/config.radiusInt;
-    var radius = radiusExt+radiusInt;
-    var posx,posy;
+    var radiusExt = orientation ? y/config.radiusExt:x/config.radiusExt;
+    var radiusInt = orientation ? y/config.radiusInt:x/config.radiusInt;
+    var radius  = radiusExt+radiusInt;
     if(orientation){
-        posx = x/2+x/config.x+(radius*(-config.x/Math.sqrt(Math.pow(config.x,2))));
-        posy = y/2+y/config.y+(radius*(-config.y/Math.sqrt(Math.pow(config.y,2))));
+        var posx = config.x === "LEFT" ? radius:x-radius;
+        var posy = config.y === "BOT" ? y-radius:radius;
     }else{
-        posx = x/2+x/-config.y+(radius*-(-config.y/Math.sqrt(Math.pow(config.y,2))));
-        posy = y/2+y/config.x+(radius*(-config.x/Math.sqrt(Math.pow(config.x,2))))
+        var posy = config.x === "LEFT" ? radius:y-radius;
+        var posx = config.y === "BOT" ? radius:x-radius;
     }
     return new joystick(radiusExt, radiusInt, config.colorExt, config.colorInt, posx, posy);
 }

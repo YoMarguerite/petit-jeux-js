@@ -2,9 +2,10 @@ document.addEventListener("mousedown", mouseDownHandler, false);
 document.addEventListener("mouseup", mouseUpHandler, false);
 document.addEventListener("mousemove", mouseMoveHandler, false);
 
+const canvas = document.getElementById("myCanvas");
 var clickInt, moveInt, shootInt, waitInt, waiter = false;
 var bool = true;
-var coordonne;
+export var coordonne = {x:0, y:0};
 
 function mouseDownHandler(e){
     if(button.collision(coordonne.x, coordonne.y)){

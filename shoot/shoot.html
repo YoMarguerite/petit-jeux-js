@@ -5,56 +5,44 @@
     <title>Gamedev Canvas Workshop</title>
     <style>
      * { padding: 0; margin: 0; }
-     canvas { background: #eee; display: block; margin: 0 auto; }
+     canvas { background: #AAe; position:absolute; top:0; left:0; }
     </style>
 </head>
 <body>
 
 <canvas id="myCanvas"></canvas>
 
-<script src="shoot-keys.js"></script>
-<script src="shoot-click.js"></script>
-<script src="square.js"></script>
-<script src="ball.js"></script>
-<script src="joystick.js"></script>
-<script src="config.json"></script>
+<script type="module">
+    import * as pers from './Perso/perso.js';
+    import * as resize from './Geometry/resize.js';
+    import * as mouse from './shoot-click.js';
 
-<script>
-var canvas = document.getElementById("myCanvas");
-canvas.width = window.innerWidth;
-canvas.height = window.innerHeight;
-var ctx = canvas.getContext("2d");
+    const Perso = pers.perso;
 
-var x, y, bool = canvas.height<canvas.width;
-x = canvas.width;
-y = canvas.height;
-var hero = initSquare(x, y, config.hero, bool);
-var button = initSquare(x, y, config.pause, bool);
-var gamepad = initJoystick(x, y, config.joystick, bool);
-var shooter = initJoystick(x,y, config.shooter, bool);
+    const canvas = document.getElementById("myCanvas");
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+    const ctx = canvas.getContext("2d");
+    ctx.imageSmoothingEnabled = false;
 
-var squares = [
-    hero,
-    button
-];
+    const cosmo = config.cosmo;
+    const perso = new Perso({x:250, y:300}, resize.rect(config.cosmo, canvas.width, canvas.height), 
+    ['./Sprite/cosmo.png','./Sprite/cosmo-head.png','./Sprite/cosmo-foot.png'],
+    cosmo.attack, cosmo.life, cosmo.speed);
 
-var intDraw = setInterval(draw, 10);
+    const intDraw = setInterval(draw, 10);
+    ctx.translate(canvas.width, 0);
+        ctx.scale(-1, 1)
 
-function draw() {
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-    balls = balls.filter((b) => {
-        b.move();
-        drawBall(b);
-        return b.x>0 && b.x < canvas.width && b.y > 0 && b.y < canvas.height
-    });
-    squares.forEach(square => {
-        square.move();
-        drawSquare(square);
-    });
-    drawJoystick(gamepad);
-    drawJoystick(shooter);
-}
+    function draw() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        
+        perso.draw(ctx);
+        perso.move(getCoordonees(), mouse.coordonne.x);
+    }
 </script>
+<script src="./shoot-keys.js"></script>
+<script src="./Config/config.json"></script>
     
 </body>
 </html>

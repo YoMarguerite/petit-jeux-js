@@ -33,3 +33,10 @@ function keyUpHandler(e) {
         downPressed = false;
     }
 }
+
+function getCoordonees(){
+    let x = +rightPressed - +leftPressed;
+    let y = +downPressed - +upPressed;
+    let distance = Math.pow(x, 2)+Math.pow(y, 2);
+    return distance != 0 ? {x:x/distance, y:y/distance} : {x:x, y:y};
+}
