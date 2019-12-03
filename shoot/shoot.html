@@ -1,65 +1,68 @@
 <!DOCTYPE html>
 <html>
-<head>
-    <meta charset="utf-8" />
-    <title>Gamedev Canvas Workshop</title>
-    <style>
-     * { padding: 0; margin: 0; }
-     canvas { background: #AAe; position:absolute; top:0; left:0; }
-    </style>
-</head>
-<body>
+    <head>
+        <meta charset="utf-8" />
+        <title>Gamedev Canvas Workshop</title>
+        <style>
+        * { padding: 0; margin: 0; }
+        canvas { background: #AAe; position:absolute; top:0; left:0; }
+        </style>
+    </head>
+    <body>
 
-<canvas id="myCanvas"></canvas>
+        <canvas id="myCanvas"></canvas>
 
-<script type="module">
-    import * as pers from './Perso/perso.js';
-    import * as mouse from './shoot-click.js';
-    import * as key from './shoot-keys.js';
+        <script src="./createjs.min.js"></script>
+        <script type="module">
+            import * as pers from './Perso/perso.js';
+            import * as mouse from './shoot-click.js';
+            import * as key from './shoot-keys.js';
+            import * as config from './Config/config.js';
 
-    const Perso = pers.perso;
+            const Perso = pers.perso;
 
-    const canvas = document.getElementById("myCanvas");
-    canvas.width = window.innerWidth;
-    canvas.height = window.innerHeight;
-    const stage = new createjs.Stage(canvas);
-    canvas.getContext("2d").imageSmoothingEnabled = false;
+            const canvas = document.getElementById("myCanvas");
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+            const stage = new createjs.Stage(canvas);
+            stage.enableMouseOver(20)
+            canvas.getContext("2d").imageSmoothingEnabled = false;
 
-    const cosmo = config.cosmo;
-    const perso = new Perso({x:250, y:300, scale:1}, 
-    ['./Sprite/cosmo.png','./Sprite/cosmo-head.png','./Sprite/cosmo-foot.png'],
-    cosmo.attack, cosmo.life, cosmo.speed);
+            const cosmo = config.cosmo;
+            const perso = new Perso({x:canvas.width/2, y:canvas.height/2, scale:1}, cosmo.sprite,cosmo.attack, cosmo.life, cosmo.speed);
 
-    const scale = size(cosmo.factor, window.innerHeight, perso.image.width);
-    var persoImage = new createjs.Bitmap(perso.image);
-    persoImage.scale = scale;
-    persoImage.regX = persoImage.image.height/2;
-    persoImage.regY = persoImage.image.height/2;
+            const scale = size(cosmo.factor, window.innerHeight, perso.image.width);
+
+            var persoImage = new createjs.Bitmap(perso.image);
+            persoImage.scale = scale;
+            persoImage.regX = persoImage.image.height/2;
+            persoImage.regY = persoImage.image.height/2;
+            
+            
+            var persoContainer = new createjs.Container();
+            persoContainer.addChild(persoImage);
+            stage.addChild(persoContainer);
+            persoImage.addEventListener("mouseover", function(evt) {
+                
+            });
+
+            createjs.Ticker.addEventListener("tick", tick);
+            createjs.Ticker.setFPS(60);
+
+            function tick(event){
+                let position = perso.move(key.getCoordonees(), mouse.coordonne.x);
+                persoContainer.x = position.x;
+                persoContainer.y = position.y;
+                persoImage.scaleX = scale*position.scale;
+                
+                stage.update(event);	
+            }
+
+            function size(factor, ref, size){
+                let percent = ref/100
+                return factor*(percent/size);
+            }
+        </script>
     
-    var persoContainer = new createjs.Container();
-    persoContainer.addChild(persoImage);
-    stage.addChild(persoContainer);
-
-    createjs.Ticker.addEventListener("tick", tick);
-    createjs.Ticker.setFPS(60);
-
-    function tick(event){
-        let position = perso.move(key.getCoordonees(), mouse.coordonne.x);
-        persoContainer.x = position.x;
-        persoContainer.y = position.y;
-        persoImage.scaleX = scale*position.scale;
-        
-        stage.update(event);	
-    }
-
-    function size(factor, ref, size){
-        let percent = ref/100
-        return factor*(percent/size);
-    }
-</script>
-<script src="./Config/config.json"></script>
-<script src="https://code.createjs.com/1.0.0/createjs.min.js"></script>
-
-    
-</body>
+    </body>
 </html>

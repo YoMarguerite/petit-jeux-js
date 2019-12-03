@@ -1,5 +1,5 @@
-Animation statique (prototype) : 3 images
-Animation déplacement (prototype) : 6 images
+Animation statique (prototype) : 2 images
+Animation déplacement (prototype) : 2 images
 Placement du canvas par rapport à l'écran
 Bouton pause : 2 image
 Ecran de pause : 1 image
