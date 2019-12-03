@@ -11,6 +11,8 @@ export class perso extends Anime{
         this.speed = speed;
         this.boolFirstAnim = false;
         this.boolSecondAnim = false;
+        this.weapon = null;
+        this.weapons = [];
     }
 
     move(coordonnees, mouse){
@@ -27,7 +29,7 @@ export class perso extends Anime{
             }
         }else{
             if(!this.boolSecondAnim){
-                this.setAnim([0,2], 250);
+                this.setAnim([0,2], 200);
                 this.boolFirstAnim = false;
                 this.boolSecondAnim = true;
             }
