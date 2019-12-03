@@ -14,35 +14,52 @@
 
 <script type="module">
     import * as pers from './Perso/perso.js';
-    import * as resize from './Geometry/resize.js';
     import * as mouse from './shoot-click.js';
+    import * as key from './shoot-keys.js';
 
     const Perso = pers.perso;
 
     const canvas = document.getElementById("myCanvas");
     canvas.width = window.innerWidth;
     canvas.height = window.innerHeight;
-    const ctx = canvas.getContext("2d");
-    ctx.imageSmoothingEnabled = false;
+    const stage = new createjs.Stage(canvas);
+    canvas.getContext("2d").imageSmoothingEnabled = false;
 
     const cosmo = config.cosmo;
-    const perso = new Perso({x:250, y:300}, resize.rect(config.cosmo, canvas.width, canvas.height), 
+    const perso = new Perso({x:250, y:300, scale:1}, 
     ['./Sprite/cosmo.png','./Sprite/cosmo-head.png','./Sprite/cosmo-foot.png'],
     cosmo.attack, cosmo.life, cosmo.speed);
 
-    const intDraw = setInterval(draw, 10);
-    ctx.translate(canvas.width, 0);
-        ctx.scale(-1, 1)
+    const scale = size(cosmo.factor, window.innerHeight, perso.image.width);
+    var persoImage = new createjs.Bitmap(perso.image);
+    persoImage.scale = scale;
+    persoImage.regX = persoImage.image.height/2;
+    persoImage.regY = persoImage.image.height/2;
+    
+    var persoContainer = new createjs.Container();
+    persoContainer.addChild(persoImage);
+    stage.addChild(persoContainer);
 
-    function draw() {
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
+    createjs.Ticker.addEventListener("tick", tick);
+    createjs.Ticker.setFPS(60);
+
+    function tick(event){
+        let position = perso.move(key.getCoordonees(), mouse.coordonne.x);
+        persoContainer.x = position.x;
+        persoContainer.y = position.y;
+        persoImage.scaleX = scale*position.scale;
         
-        perso.draw(ctx);
-        perso.move(getCoordonees(), mouse.coordonne.x);
+        stage.update(event);	
+    }
+
+    function size(factor, ref, size){
+        let percent = ref/100
+        return factor*(percent/size);
     }
 </script>
-<script src="./shoot-keys.js"></script>
 <script src="./Config/config.json"></script>
+<script src="https://code.createjs.com/1.0.0/createjs.min.js"></script>
+
     
 </body>
 </html>

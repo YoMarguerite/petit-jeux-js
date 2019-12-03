@@ -1,10 +1,7 @@
-import * as image from './image.js';
-
-const Image = image.image;
-
-export class anime extends Image{
-    constructor(position, size, images){
-        super(position, size, images[0]);
+export class anime{
+    constructor(images){
+        this.image = new Image();
+        this.image.src = images[0];
         this.images = images;
         this.interval = null;
         this.anime = null;
@@ -31,13 +28,5 @@ export class anime extends Image{
             this.image.src = index<this.anime.length ? this.images[this.anime[index]] : this.images[this.anime[0]];
         }, int);
         return true;
-    }
-
-    draw(ctx){
-        if(this.size != null){
-            ctx.drawImage(this.image, this.position.x, this.position.y, this.size.width, this.size.height);
-        }else{
-            ctx.drawImage(this.image, this.position.x, this.position.y);
-        }
     }
 }

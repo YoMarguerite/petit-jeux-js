@@ -1,5 +1,5 @@
-document.addEventListener("mousedown", mouseDownHandler, false);
-document.addEventListener("mouseup", mouseUpHandler, false);
+//document.addEventListener("mousedown", mouseDownHandler, false);
+//document.addEventListener("mouseup", mouseUpHandler, false);
 document.addEventListener("mousemove", mouseMoveHandler, false);
 
 const canvas = document.getElementById("myCanvas");

@@ -1,7 +1,6 @@
 config = {
     "cosmo":{
-        "width":20,
-        "height":20,
+        "factor":15,
         "sprite":["./Sprite/cosmo.png","./Sprite/cosmo-head.png","./Sprite/cosmo-foot.png"],
         "attack":1,
         "life":5,

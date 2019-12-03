@@ -3,8 +3,9 @@ import * as anime from '../Image/anime.js';
 const Anime = anime.anime;
 
 export class perso extends Anime{
-    constructor(position, size, images, life, attack, speed){
-        super(position, size, images);
+    constructor(position, images, life, attack, speed){
+        super(images);
+        this.position = position;
         this.life = life;
         this.attack = attack;
         this.speed = speed;
@@ -12,21 +13,12 @@ export class perso extends Anime{
         this.boolSecondAnim = false;
     }
 
-    draw(ctx, mousex){
-        ctx.save();
-        if(mousex<this.position.x){
-            //ctx.translate(this.position.x+(this.size.width/2), this.position.y+(this.size.height/2));
-            ctx.rotate(90*Math.PI/180);
-        }
-        if(this.size != null){
-            ctx.drawImage(this.image, this.position.x, this.position.y, this.size.width, this.size.height);
+    move(coordonnees, mouse){
+        if(mouse > this.position.x){
+            this.position.scale = 1;
         }else{
-            ctx.drawImage(this.image, this.position.x, this.position.y);
+            this.position.scale = -1;
         }
-        ctx.restore();
-    }
-
-    move(coordonnees){
         if((coordonnees.x === 0)&&(coordonnees.y === 0)){
             if(!this.boolFirstAnim){
                 this.setAnim([0,1], 250);
@@ -44,5 +36,6 @@ export class perso extends Anime{
         let dy = coordonnees.y*(this.speed);
         this.position.x += dx;
         this.position.y += dy;
+        return this.position;
     }
 }
