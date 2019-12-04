@@ -8,6 +8,7 @@ const Perso = pers.perso;
 const canvas = document.getElementById("myCanvas");
 canvas.width = window.innerWidth;
 canvas.height = window.innerHeight;
+
 const stage = new createjs.Stage(canvas);
 stage.enableMouseOver(20)
 canvas.getContext("2d").imageSmoothingEnabled = false;
@@ -22,26 +23,19 @@ persoImage.scale = scale;
 persoImage.regX = persoImage.image.width/2;
 persoImage.regY = persoImage.image.height/2;
 
-var imwp = new Image();
-imwp.src = './Sprite/Weapon/revolver.png';
-var weapon = new createjs.Bitmap(imwp);
-weapon.scale = 2;
-// weapon.regX = weapon.image.width/2
-weapon.regY = weapon.image.height/2
-// weapon.x=25
-weapon.y = 25
+const weapon = createWeapon();
 
 var balls = [];
 
 var persoContainer = new createjs.Container();
 persoContainer.addChild(persoImage, weapon);
 
-stage.addChild(persoContainer)
+stage.addChild(persoContainer);
 
 canvas.addEventListener("mousemove", function(evt){
-    var mouse = {x:evt.clientX, y:evt.clientY};
-    var origin = {x:persoContainer.x+weapon.x, y:persoContainer.y+weapon.y};
-    var point = {
+    let mouse = {x:evt.clientX, y:evt.clientY};
+    let origin = {x:persoContainer.x+weapon.x, y:persoContainer.y+weapon.y};
+    let point = {
         adjacent:Math.sqrt(Math.pow(mouse.x-origin.x,2)),
         hypothenuse:Math.sqrt(Math.pow(mouse.x-origin.x,2)+Math.pow(mouse.y-origin.y,2))
     };
@@ -50,19 +44,10 @@ canvas.addEventListener("mousemove", function(evt){
 })
 
 canvas.addEventListener("click", function(evt){
-    var fire = new Image();
-    fire.src = './Sprite/Weapon/fire.png';
-    var img = new createjs.Bitmap(fire);
-    img.scaleX = Math.sign(weapon.scaleX);
-    img.rotation = weapon.rotation;
-    img.x = evt.clientX;
-    img.y = evt.clientY;
-    img.regX = fire.width/2;
-    img.regY = fire.height/2;
-    img.coefx = 1;
-    img.coefy = 1;
-    balls.push(img);
-    stage.addChild(img);
+    let fire = createFire(evt.clientX,evt.clientY,weapon);
+    balls.push(fire);
+    stage.addChild(fire);
+    console.log(stage)
 })
 
 createjs.Ticker.addEventListener("tick", tick);
@@ -75,8 +60,7 @@ function tick(event){
     persoImage.scaleX = scale*position.scale;
     weapon.scaleX = 2*position.scale;
     balls.forEach((ball) => {
-        ball.x+=ball.coefx;
-        ball.y+=ball.coefy;
+        ball.move();
     })
     stage.update(event);	
 }
@@ -84,4 +68,50 @@ function tick(event){
 function size(factor, ref, size){
     let percent = ref/100
     return factor*(percent/size);
+}
+
+function createWeapon(){
+
+    let img = new Image();
+    img.src = './Sprite/Weapon/revolver.png';
+
+    let weapon = new createjs.Bitmap(img);
+    weapon.scale = 2;
+    weapon.regY = weapon.image.height/2;
+    weapon.y = 25;
+
+    return weapon;
+}
+
+function createFire(x, y, weapon){
+
+    let img = new Image();
+    img.src = './Sprite/Weapon/fire.png';
+
+    let fire = new createjs.Bitmap(img);
+
+    fire.scaleX = Math.sign(weapon.scaleX);
+    fire.rotation = weapon.rotation;
+
+    fire.x = x;
+    fire.y = y;
+
+    fire.regX = img.width/2;
+    fire.regY = img.height/2;
+
+    fire.move = function(coef){
+        this.x += coef.dx;
+        this.y += coef.dy;
+    }
+
+    return fire;
+}
+
+function calculCoefDirection(pointA, pointB){
+    var dx = pointA.x-pointB.x;
+    var dy = pointA.y-pointB.y;
+    var divise = Math.sqrt(Math.pow(dx,2)+Math.pow(dy,2));
+    dx = dx/divise;
+    dy = dy/divise;
+    return [dx, dy];
 }
