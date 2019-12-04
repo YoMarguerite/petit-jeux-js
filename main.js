@@ -1,7 +1,7 @@
-import * as pers from './Perso/perso.js';
-import * as mouse from './shoot-click.js';
-import * as key from './shoot-keys.js';
-import * as config from './Config/config.js';
+import * as pers from './shoot/Perso/perso.js';
+import * as mouse from './shoot/shoot-click.js';
+import * as key from './shoot/shoot-keys.js';
+import * as config from './shoot/Config/config.js';
 
 const Perso = pers.perso;
 
@@ -73,7 +73,7 @@ function size(factor, ref, size){
 function createWeapon(){
 
     let img = new Image();
-    img.src = './Sprite/Weapon/revolver.png';
+    img.src = './shoot/Sprite/Weapon/revolver/revolver.png';
 
     let weapon = new createjs.Bitmap(img);
     weapon.scale = 2;
@@ -86,7 +86,7 @@ function createWeapon(){
 function createFire(x, y, weapon){
 
     let img = new Image();
-    img.src = './Sprite/Weapon/fire.png';
+    img.src = './shoot/Sprite/Weapon/revolver/fire.png';
 
     let fire = new createjs.Bitmap(img);
 
@@ -99,11 +99,15 @@ function createFire(x, y, weapon){
     fire.regX = img.width/2;
     fire.regY = img.height/2;
 
-    fire.move = function(coef){
-        this.x += coef.dx;
-        this.y += coef.dy;
-    }
+    // fire.move = function(coef){
+    //     this.x += coef.dx;
+    //     this.y += coef.dy;
+    // }
 
+    fire.move = function(){
+        this.x += 1;
+        this.y += 1;
+    }
     return fire;
 }
 
