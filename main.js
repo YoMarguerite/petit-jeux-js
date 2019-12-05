@@ -23,13 +23,14 @@ persoImage.regX = persoImage.image.width/2;
 persoImage.regY = persoImage.image.height/2;
 
 const weapon = createWeapon();
+//var rect = new createjs.Rectangle(0, 0, 100, 100);
 
 var balls = [];
 
 var persoContainer = new createjs.Container();
 persoContainer.addChild(persoImage, weapon);
 
-stage.addChild(persoContainer);
+stage.addChild(persoContainer)//, rect);
 
 var mousepos = {x:0,y:0};
 canvas.addEventListener("mousemove", function(evt){
@@ -60,14 +61,14 @@ canvas.addEventListener("mouseup", function(evt){
 })
 
 createjs.Ticker.addEventListener("tick", tick);
-createjs.Ticker.setFPS(60);
+createjs.Ticker._setFPS(60);
 
 function tick(event){
     let position = perso.move(key.getCoordonees(), mousepos.x);
     persoContainer.x = position.x;
     persoContainer.y = position.y;
     persoImage.scaleX = scale*position.scale;
-    weapon.scaleX = 2*position.scale;
+    weapon.scaleX = position.scale;
     balls.forEach((ball) => {
         ball.move();
     })
@@ -85,9 +86,9 @@ function createWeapon(){
     img.src = './shoot/Sprite/Weapon/revolver/revolver.png';
 
     let weapon = new createjs.Bitmap(img);
-    weapon.scale = 2;
+    weapon.scale = 1;
     weapon.regY = weapon.image.height/2;
-    weapon.y = 25;
+    weapon.y = weapon.image.height/2;
 
     return weapon;
 }
@@ -106,7 +107,7 @@ function createFire(weapon){
     fire.rotation = weapon.rotation;
     
     fire.x = persoContainer.x+((weapon.image.width*weapon.scaleX)*Math.cos(fire.rotation*Math.PI/180));
-    fire.y = persoContainer.y+15+((weapon.image.width*weapon.scaleX)*Math.sin(fire.rotation*Math.PI/180));
+    fire.y = persoContainer.y+weapon.y+((weapon.image.width*weapon.scaleX)*Math.sin(fire.rotation*Math.PI/180));
 
     fire.regX = img.width/2;
     fire.regY = img.height/2;
