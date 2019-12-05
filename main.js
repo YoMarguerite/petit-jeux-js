@@ -1,7 +1,7 @@
 import * as pers from './shoot/Perso/perso.js';
 import * as key from './shoot/shoot-keys.js';
 import * as config from './shoot/Config/config.js';
-
+createjs.Sound.registerSound('./shoot/Sprite/Weapon/revolver/sound.mp3','revolver');
 const Perso = pers.perso;
 
 const canvas = document.getElementById("myCanvas");
@@ -93,7 +93,7 @@ function createWeapon(){
 }
 
 function createFire(weapon){
-
+    createjs.Sound.play('revolver');
     weapon.image.src='./shoot/Sprite/Weapon/revolver/revolver-shoot.png';
     setTimeout(function(){weapon.image.src='./shoot/Sprite/Weapon/revolver/revolver.png'},100);
 
