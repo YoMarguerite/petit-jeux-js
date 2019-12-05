@@ -95,7 +95,7 @@ function createWeapon(){
 function createFire(weapon){
 
     weapon.image.src='./shoot/Sprite/Weapon/revolver/revolver-shoot.png';
-    setTimeout(function(){weapon.image.src='./shoot/Sprite/Weapon/revolver/revolver.png'},100)
+    setTimeout(function(){weapon.image.src='./shoot/Sprite/Weapon/revolver/revolver.png'},10000);
 
     let img = new Image();
     img.src = './shoot/Sprite/Weapon/revolver/fire.png';
