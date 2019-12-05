@@ -30,7 +30,10 @@ var balls = [];
 var persoContainer = new createjs.Container();
 persoContainer.addChild(persoImage, weapon);
 
-stage.addChild(persoContainer)//, rect);
+
+const ground = createGround();
+
+stage.addChild(persoContainer,ground);
 
 var mousepos = {x:0,y:0};
 canvas.addEventListener("mousemove", function(evt){
@@ -124,6 +127,15 @@ function createFire(weapon){
     balls.push(fire);
     stage.addChild(fire);
     return fire;
+}
+
+function createGround(){
+    let img = new Image();
+    img.src = './shoot/Sprite/ground.png';
+    let map = new createjs.Bitmap(img);
+    let contain = new createjs.Container();
+    contain.addChild(map);
+    return contain;
 }
 
 function calculCoefDirection(pointA, pointB){
