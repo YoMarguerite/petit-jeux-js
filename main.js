@@ -1,5 +1,4 @@
 import * as pers from './shoot/Perso/perso.js';
-import * as mouse from './shoot/shoot-click.js';
 import * as key from './shoot/shoot-keys.js';
 import * as config from './shoot/Config/config.js';
 
@@ -32,29 +31,39 @@ persoContainer.addChild(persoImage, weapon);
 
 stage.addChild(persoContainer);
 
+var mousepos = {x:0,y:0};
 canvas.addEventListener("mousemove", function(evt){
-    let mouse = {x:evt.clientX, y:evt.clientY};
+    mousepos = {x:evt.x, y:evt.y};
     let origin = {x:persoContainer.x+weapon.x, y:persoContainer.y+weapon.y};
     let point = {
-        adjacent:Math.sqrt(Math.pow(mouse.x-origin.x,2)),
-        hypothenuse:Math.sqrt(Math.pow(mouse.x-origin.x,2)+Math.pow(mouse.y-origin.y,2))
+        adjacent:Math.sqrt(Math.pow(mousepos.x-origin.x,2)),
+        hypothenuse:Math.sqrt(Math.pow(mousepos.x-origin.x,2)+Math.pow(mousepos.y-origin.y,2))
     };
-    weapon.rotation = Math.sign(weapon.scaleX)*Math.sign(mouse.y-origin.y)
+    weapon.rotation = Math.sign(weapon.scaleX)*Math.sign(mousepos.y-origin.y)
     *Math.acos(point.adjacent/point.hypothenuse)*180/Math.PI;
 })
 
-canvas.addEventListener("click", function(evt){
-    let fire = createFire(evt.clientX,evt.clientY,weapon);
-    balls.push(fire);
-    stage.addChild(fire);
-    console.log(stage)
+var firebool = true;
+var interval;
+
+canvas.addEventListener("mousedown", function(evt){
+    if(firebool){
+        let fire = createFire(weapon);
+        firebool = false;
+        setTimeout(function(){firebool=true},500);
+    }
+    interval = setInterval(function(){createFire(weapon)}, 500);
+})
+
+canvas.addEventListener("mouseup", function(evt){
+    clearInterval(interval)
 })
 
 createjs.Ticker.addEventListener("tick", tick);
 createjs.Ticker.setFPS(60);
 
 function tick(event){
-    let position = perso.move(key.getCoordonees(), mouse.coordonne.x);
+    let position = perso.move(key.getCoordonees(), mousepos.x);
     persoContainer.x = position.x;
     persoContainer.y = position.y;
     persoImage.scaleX = scale*position.scale;
@@ -83,7 +92,10 @@ function createWeapon(){
     return weapon;
 }
 
-function createFire(x, y, weapon){
+function createFire(weapon){
+
+    weapon.image.src='./shoot/Sprite/Weapon/revolver/revolver-shoot.png';
+    setTimeout(function(){weapon.image.src='./shoot/Sprite/Weapon/revolver/revolver.png'},100)
 
     let img = new Image();
     img.src = './shoot/Sprite/Weapon/revolver/fire.png';
@@ -92,22 +104,24 @@ function createFire(x, y, weapon){
 
     fire.scaleX = Math.sign(weapon.scaleX);
     fire.rotation = weapon.rotation;
-
-    fire.x = x;
-    fire.y = y;
+    
+    fire.x = persoContainer.x+((weapon.image.width*weapon.scaleX)*Math.cos(fire.rotation*Math.PI/180));
+    fire.y = persoContainer.y+15+((weapon.image.width*weapon.scaleX)*Math.sin(fire.rotation*Math.PI/180));
 
     fire.regX = img.width/2;
     fire.regY = img.height/2;
 
-    // fire.move = function(coef){
-    //     this.x += coef.dx;
-    //     this.y += coef.dy;
-    // }
+    let pointA = {x:mousepos.x,y:mousepos.y};
+    let pointB = {x:persoContainer.x, y:persoContainer.y};
 
     fire.move = function(){
-        this.x += 1;
-        this.y += 1;
+        
+        let coef = calculCoefDirection(pointA, pointB);
+        this.x += coef.x*10;
+        this.y += coef.y*10;
     }
+    balls.push(fire);
+    stage.addChild(fire);
     return fire;
 }
 
@@ -117,5 +131,5 @@ function calculCoefDirection(pointA, pointB){
     var divise = Math.sqrt(Math.pow(dx,2)+Math.pow(dy,2));
     dx = dx/divise;
     dy = dy/divise;
-    return [dx, dy];
+    return {x:dx, y:dy};
 }
