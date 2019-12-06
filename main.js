@@ -23,7 +23,6 @@ persoImage.regX = persoImage.image.width/2;
 persoImage.regY = persoImage.image.height/2;
 
 const weapon = createWeapon();
-//var rect = new createjs.Rectangle(0, 0, 100, 100);
 
 var balls = [];
 
@@ -33,7 +32,7 @@ persoContainer.addChild(persoImage, weapon);
 
 const ground = createGround();
 
-stage.addChild(persoContainer,ground);
+stage.addChild(ground,persoContainer);
 
 var mousepos = {x:0,y:0};
 canvas.addEventListener("mousemove", function(evt){
@@ -133,8 +132,14 @@ function createGround(){
     let img = new Image();
     img.src = './shoot/Sprite/ground.png';
     let map = new createjs.Bitmap(img);
+    
     let contain = new createjs.Container();
     contain.addChild(map);
+    contain.scale = 5; 
+    contain.x = canvas.width/2;
+    contain.y = canvas.height/2;
+    contain.regX = img.width/2;
+    contain.regY = img.height/2;
     return contain;
 }
 
