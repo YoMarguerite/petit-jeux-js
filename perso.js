@@ -1,8 +1,4 @@
-import * as anime from '../Image/anime.js';
-
-const Anime = anime.anime;
-
-export class perso extends Anime{
+class perso extends Anime{
     constructor(position, images, life, attack, speed){
         super(images);
         this.position = position;
@@ -41,3 +37,5 @@ export class perso extends Anime{
         return this.position;
     }
 }
+
+console.log(perso)

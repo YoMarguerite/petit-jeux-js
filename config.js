@@ -5,5 +5,3 @@ const hero = {
     life   : 5,
     speed  : 4,
 };
-
-export const cosmo = Object.create(hero);

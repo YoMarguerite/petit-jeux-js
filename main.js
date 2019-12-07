@@ -1,8 +1,4 @@
-import * as pers from './shoot/Perso/perso.js';
-import * as key from './shoot/shoot-keys.js';
-import * as config from './shoot/Config/config.js';
 createjs.Sound.registerSound('./shoot/Sprite/Weapon/revolver/sound.mp3','revolver');
-const Perso = pers.perso;
 
 const canvas = document.getElementById("myCanvas");
 canvas.width = window.innerWidth;
@@ -12,12 +8,87 @@ const stage = new createjs.Stage(canvas);
 stage.enableMouseOver(20)
 canvas.getContext("2d").imageSmoothingEnabled = false;
 
-const cosmo = config.cosmo;
-const perso = new Perso({x:canvas.width/2, y:canvas.height/2, scale:1}, cosmo.sprite,cosmo.attack, cosmo.life, cosmo.speed);
 
-const scale = size(cosmo.factor, window.innerHeight, perso.image.width);
 
-var persoImage = new createjs.Bitmap(perso.image);
+class anime{
+    constructor(images){
+        this.image = new Image();
+        this.image.src = images[0];
+        this.images = images;
+        this.interval = null;
+        this.anime = null;
+    }
+
+    setAnim(anime, int){
+        if((anime.length === 0) && (int > 0)){
+            return false;
+        }
+        if((anime.filter((a) => {
+            if(this.images[a] == null){
+                
+                return true;
+            }
+            return false;
+        })).length != 0){
+            return false;
+        };
+        this.anime = anime;
+        this.image.src = this.images[this.anime[0]];
+        clearInterval(this.interval);
+        this.interval = setInterval(() => {
+            let index = this.images.indexOf(this.image.attributes.src.value)+1;
+            this.image.src = index<this.anime.length ? this.images[this.anime[index]] : this.images[this.anime[0]];
+        }, int);
+        return true;
+    }
+}
+
+
+class perso extends anime{
+    constructor(position, images, life, attack, speed){
+        super(images);
+        this.position = position;
+        this.life = life;
+        this.attack = attack;
+        this.speed = speed;
+        this.boolFirstAnim = false;
+        this.boolSecondAnim = false;
+        this.weapon = null;
+        this.weapons = [];
+    }
+
+    move(coordonnees, mouse){
+        if(mouse > this.position.x){
+            this.position.scale = 1;
+        }else{
+            this.position.scale = -1;
+        }
+        if((coordonnees.x === 0)&&(coordonnees.y === 0)){
+            if(!this.boolFirstAnim){
+                this.setAnim([0,1], 250);
+                this.boolFirstAnim = true;
+                this.boolSecondAnim = false;
+            }
+        }else{
+            if(!this.boolSecondAnim){
+                this.setAnim([0,2], 200);
+                this.boolFirstAnim = false;
+                this.boolSecondAnim = true;
+            }
+        }
+        let dx = coordonnees.x*(this.speed);
+        let dy = coordonnees.y*(this.speed);
+        this.position.x += dx;
+        this.position.y += dy;
+        return this.position;
+    }
+}
+
+const cosmo = new perso({x:canvas.width/2, y:canvas.height/2, scale:1}, hero.sprite,hero.attack, hero.life, hero.speed);
+
+const scale = size(hero.factor, window.innerHeight, cosmo.image.width);
+
+var persoImage = new createjs.Bitmap(cosmo.image);
 persoImage.scale = scale;
 persoImage.regX = persoImage.image.width/2;
 persoImage.regY = persoImage.image.height/2;
@@ -37,14 +108,7 @@ stage.addChild(ground,persoContainer);
 var mousepos = {x:0,y:0};
 canvas.addEventListener("mousemove", function(evt){
     mousepos = {x:evt.x, y:evt.y};
-    let origin = {x:persoContainer.x+weapon.x, y:persoContainer.y+weapon.y};
-    let point = {
-        adjacent:Math.sqrt(Math.pow(mousepos.x-origin.x,2)),
-        hypothenuse:Math.sqrt(Math.pow(mousepos.x-origin.x,2)+Math.pow(mousepos.y-origin.y,2))
-    };
-    weapon.rotation = Math.sign(weapon.scaleX)*Math.sign(mousepos.y-origin.y)
-    *Math.acos(point.adjacent/point.hypothenuse)*180/Math.PI;
-})
+});
 
 var firebool = true;
 var interval;
@@ -63,84 +127,28 @@ canvas.addEventListener("mouseup", function(evt){
 })
 
 createjs.Ticker.addEventListener("tick", tick);
-createjs.Ticker._setFPS(60);
+createjs.Ticker._setFPS(30);
 
 function tick(event){
-    let position = perso.move(key.getCoordonees(), mousepos.x);
+    let position = cosmo.move(getCoordonees(), mousepos.x);
     persoContainer.x = position.x;
     persoContainer.y = position.y;
     persoImage.scaleX = scale*position.scale;
     weapon.scaleX = position.scale;
     balls.forEach((ball) => {
-        ball.move();
+        if(!ndgmr.checkPixelCollision(ground.children[1], ball)){
+            ball.move();
+        }
     })
+
+    rotate({x:persoContainer.x+weapon.x, y:persoContainer.y+weapon.y}, mousepos, weapon);
+
     stage.update(event);	
 }
 
 function size(factor, ref, size){
     let percent = ref/100
     return factor*(percent/size);
-}
-
-function createWeapon(){
-
-    let img = new Image();
-    img.src = './shoot/Sprite/Weapon/revolver/revolver.png';
-
-    let weapon = new createjs.Bitmap(img);
-    weapon.scale = 1;
-    weapon.regY = weapon.image.height/2;
-    weapon.y = weapon.image.height/2;
-
-    return weapon;
-}
-
-function createFire(weapon){
-    createjs.Sound.play('revolver');
-    weapon.image.src='./shoot/Sprite/Weapon/revolver/revolver-shoot.png';
-    setTimeout(function(){weapon.image.src='./shoot/Sprite/Weapon/revolver/revolver.png'},100);
-
-    let img = new Image();
-    img.src = './shoot/Sprite/Weapon/revolver/fire.png';
-
-    let fire = new createjs.Bitmap(img);
-
-    fire.scaleX = Math.sign(weapon.scaleX);
-    fire.rotation = weapon.rotation;
-    
-    fire.x = persoContainer.x+((weapon.image.width*weapon.scaleX)*Math.cos(fire.rotation*Math.PI/180));
-    fire.y = persoContainer.y+weapon.y+((weapon.image.width*weapon.scaleX)*Math.sin(fire.rotation*Math.PI/180));
-
-    fire.regX = img.width/2;
-    fire.regY = img.height/2;
-
-    let pointA = {x:mousepos.x,y:mousepos.y};
-    let pointB = {x:persoContainer.x, y:persoContainer.y};
-
-    fire.move = function(){
-        
-        let coef = calculCoefDirection(pointA, pointB);
-        this.x += coef.x*10;
-        this.y += coef.y*10;
-    }
-    balls.push(fire);
-    stage.addChild(fire);
-    return fire;
-}
-
-function createGround(){
-    let img = new Image();
-    img.src = './shoot/Sprite/ground.png';
-    let map = new createjs.Bitmap(img);
-    
-    let contain = new createjs.Container();
-    contain.addChild(map);
-    contain.scale = 5; 
-    contain.x = canvas.width/2;
-    contain.y = canvas.height/2;
-    contain.regX = img.width/2;
-    contain.regY = img.height/2;
-    return contain;
 }
 
 function calculCoefDirection(pointA, pointB){
@@ -151,3 +159,14 @@ function calculCoefDirection(pointA, pointB){
     dy = dy/divise;
     return {x:dx, y:dy};
 }
+
+function rotate(origin, direction, el){
+    let point = {
+        adjacent:Math.sqrt(Math.pow(direction.x-origin.x,2)),
+        hypothenuse:Math.sqrt(Math.pow(direction.x-origin.x,2)+Math.pow(direction.y-origin.y,2))
+    };
+    el.rotation = Math.sign(el.scaleX)*Math.sign(direction.y-origin.y)
+    *Math.acos(point.adjacent/point.hypothenuse)*180/Math.PI;
+}
+
+

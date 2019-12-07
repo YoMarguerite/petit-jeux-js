@@ -1,4 +1,4 @@
-export class anime{
+class anime{
     constructor(images){
         this.image = new Image();
         this.image.src = images[0];
@@ -22,8 +22,8 @@ export class anime{
         };
         this.anime = anime;
         this.image.src = this.images[this.anime[0]];
-        clearInterval(this.interval);
-        this.interval = setInterval(() => {
+        cancelAnimationFrame(this.interval);
+        this.interval = requestAnimationFrame(() => {
             let index = this.images.indexOf(this.image.attributes.src.value)+1;
             this.image.src = index<this.anime.length ? this.images[this.anime[index]] : this.images[this.anime[0]];
         }, int);

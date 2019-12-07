@@ -34,7 +34,7 @@ function keyUpHandler(e) {
     }
 }
 
-export function getCoordonees(){
+function getCoordonees(){
     let x = +rightPressed - +leftPressed;
     let y = +downPressed - +upPressed;
     let distance = Math.pow(x, 2)+Math.pow(y, 2);
