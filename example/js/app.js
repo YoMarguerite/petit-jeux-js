@@ -123,6 +123,7 @@ function imagesLoaded(e) {
   gun.y = 10;
   gun.scaleX = scale;
   gun.scaleY = scale;
+  gun.lastShoot = 0;
   gun.move = function(){
     let point = {
       adjacent:Math.sqrt(Math.pow(stage.mouseX-this.parent.x,2)),
@@ -130,11 +131,21 @@ function imagesLoaded(e) {
     };
     this.rotation = Math.sign(this.scaleX)*Math.sign(stage.mouseY-this.parent.y)
     *Math.acos(point.adjacent/point.hypothenuse)*180/Math.PI;
-
+    
+    let tick = createjs.Ticker.getTime();
+    if(tick>(this.lastShoot+500)){
+      if(this._animation.name === 'shoot'){
+        this.gotoAndStop('shoot');
+        this.gotoAndPlay('gun');
+      }
+    }
     if(boolDown){
-      if(this._animation.name === 'gun'){
-        this.gotoAndStop('gun');
-        this.gotoAndPlay('shoot');
+      if(tick>(this.lastShoot+1000)){
+        this.lastShoot = tick;
+        if(this._animation.name === 'gun'){
+          this.gotoAndStop('gun');
+          this.gotoAndPlay('shoot');
+        }
       }
     }else{
       if(this._animation.name === 'shoot'){
