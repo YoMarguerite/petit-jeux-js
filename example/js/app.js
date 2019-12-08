@@ -3,7 +3,9 @@ var canvas, stage, af, stars=[], hero, shelter, stats;
 var STARS = 'assets/stars.png?v=4',
     STAR = 'assets/star.png?v=4',
     SHELTER = 'assets/shelter.png?v=4',
-    COSMO = 'assets/cosmo.png';
+    COSMO = 'assets/cosmo.png',
+    GUN = 'assets/revolver.png';
+
 
 pixelCollision = ndgmr.checkPixelCollision;
 rectCollision = ndgmr.checkRectCollision;
@@ -20,13 +22,6 @@ function init() {
   // enlève le foue sur les images
   var ctx = canvas.getContext('2d');
   ctx.imageSmoothingEnabled = false;
-
-  //définie les éléments liés au canvas
-  canvas.onmousedown = onMouseDown;
-  canvas.onmouseup = onMouseUp;
-  document.onkeydown = keyDown;
-  document.onkeyup = keyUp;
-
    
   // initializing the stage 
   stage = new createjs.Stage(canvas);
@@ -36,7 +31,7 @@ function init() {
   af.onComplete = function() {
      imagesLoaded();
   }
-  af.loadAssets([STAR,STARS,SHELTER,COSMO]);
+  af.loadAssets([STAR,STARS,SHELTER,COSMO,GUN]);
 }
  
 // creating a Bitmap with that image 
@@ -70,20 +65,114 @@ function imagesLoaded(e) {
      star.rotVel = Math.random()*4-2;
      star.scaleX = star.scaleY = Math.random()*.5+.5;
      star.rotation = Math.random() * 360;
+
+     star.move = function(){
+       this.y+=this.velY;
+       this.rotatio += this.rotVel;
+     }
+
+     star.reset = function(){
+      this.y = -15 - Math.random()*15;
+      this.x = Math.random()*canvas.width;
+     }
+
      stage.addChild(star);
      stars.push(star);
   }
 
-  var persoss = new createjs.SpriteSheet({images:[af[COSMO]],frames: {width:26, height:28, count:2, regX:13, regY:14}, animations:{move:[0,1]}});
+  var persoss = new createjs.SpriteSheet({
+    images:[af[COSMO]],
+    frames: {width:26, height:28, count:3, regX:13, regY:14}, 
+    animations:{
+      head:{frames:[0,1],speed:0.25}, 
+      move:{frames:[0,2],speed:0.25}}
+  });
+  
   var perso = new createjs.Sprite(persoss);
-  perso.spriteSheet.getAnimation('move').speed = 0.25;
-  perso.gotoAndPlay('move');
-  perso.x = 200;
-  perso.y = 100;
-  perso.scaleX = -5;
-  perso.scaleY = 5;
-  stage.addChild(perso);
-  hero = perso;
+  perso.gotoAndPlay('head');
+  let scale = size(10, canvas.height, 28);
+  perso.scaleX = scale;
+  perso.scaleY = scale;
+
+  perso.move = function(){
+    if((upPress)||(downPress)||(leftPress)||(rightPress)){
+      if(this._animation.name === 'head'){
+        this.gotoAndStop('head');
+        this.gotoAndPlay('move');
+      }
+    }else{
+      if(this._animation.name === 'move'){
+        this.gotoAndStop('move');
+        this.gotoAndPlay('head');
+      }
+    }
+  };
+
+  var gunss = new createjs.SpriteSheet({
+    images:[af[GUN]],
+    frames: {width:30,height:15,count:2,regX:4, regY:8},
+    animations:{
+      gun:0,
+      shoot:1,
+    }
+  });
+
+  var gun = new createjs.Sprite(gunss);
+  gun.gotoAndPlay('gun');
+  scale = size(20, perso.spriteSheet._frameWidth*perso.scaleY, 15);
+  gun.y = 10;
+  gun.scaleX = scale;
+  gun.scaleY = scale;
+  gun.move = function(){
+    let point = {
+      adjacent:Math.sqrt(Math.pow(stage.mouseX-this.parent.x,2)),
+      hypothenuse:Math.sqrt(Math.pow(stage.mouseX-this.parent.x,2)+Math.pow(stage.mouseY-this.parent.y,2))
+    };
+    this.rotation = Math.sign(this.scaleX)*Math.sign(stage.mouseY-this.parent.y)
+    *Math.acos(point.adjacent/point.hypothenuse)*180/Math.PI;
+
+    if(boolDown){
+      if(this._animation.name === 'gun'){
+        this.gotoAndStop('gun');
+        this.gotoAndPlay('shoot');
+      }
+    }else{
+      if(this._animation.name === 'shoot'){
+        this.gotoAndStop('shoot');
+        this.gotoAndPlay('gun');
+      }
+    }
+  };
+
+  var cont = new createjs.Container();
+  cont.addChild(perso);
+  cont.addChild(gun);
+  cont.x = 200;
+  cont.y = 100;
+  cont.velX = 5;
+  cont.velY = 5;
+  cont.move = function(){
+    this.scaleX = stage.mouseX < this.x ? -this.scaleY : this.scaleY;
+    if(upPress){
+      this.y-=this.velY;
+    }
+    if(downPress){
+      this.y+=this.velY;
+    }
+    if(leftPress){
+      this.x-=this.velX;
+    }
+    if(rightPress){
+      this.x+=this.velX;
+    }
+    this.children.forEach((child) => {
+      child.move();
+    })
+  };
+  console.log(gun)
+
+  stage.addChild(cont);
+  hero = cont;
 
   shelter = new createjs.Bitmap(af[SHELTER]);
   shelter.x = canvas.width/2;
@@ -102,37 +191,18 @@ function onTick(e) {
    stats.begin();
    for ( var c = 0; c < stars.length; c++ ) {
       var star = stars[c];
-      star.y += star.velY;
-      star.rotation += star.rotVel;
+      star.move();
       
       var intersection = pixelCollision(shelter,star,window.alphaThresh);
       if ( intersection ) {
-         //console.log(intersection.x,intersection.y,intersection.width,intersection.height);
-         star.y = -15 - Math.random()*15;
-         star.x = Math.random()*canvas.width;
+         star.reset();
       }
       if ( star.y > canvas.height ) {
-        star.y = -15 - Math.random()*15;
-        star.x = Math.random()*canvas.width;
+        star.reset();
       }
    }
-   if(stage.mouseX < hero.x){
-    hero.scaleX = -5;
-   }else{
-    hero.scaleX = 5;
-   }
-   if(upPress){
-     hero.y-=1;
-   }
-   if(downPress){
-     hero.y+=1;
-   }
-   if(leftPress){
-     hero.x-=1;
-   }
-   if(rightPress){
-     hero.x+=1;
-   }
+   hero.move();
+   
   stage.update();
   //shelter.x = stage.mouseX;
   //shelter.y = stage.mouseY;
@@ -140,6 +210,10 @@ function onTick(e) {
   stats.end();
 }
 
+function size(factor, ref, size){
+  let percent = ref/100
+  return factor*(percent/size);
+}
 
 function getWidth() {
   if( typeof( window.innerWidth ) == 'number' ) {
@@ -161,42 +235,5 @@ function getHeight() {
   }
 }
 
-// function liées aux évènements de la page
-var boolDown, upPress, downPress, leftPress, rightPress;
-boolDown = upPress = downPress = leftPress = rightPress = false;
-
-function onMouseDown(e) {
-  boolDown = true;
-}
-
-function onMouseUp(e) {
-  boolDown = false;
-}
-
-function keyDown(e){
-  if(e.key == "Right" || e.key == "ArrowRight") {
-    rightPress = true;
-  }
-  else if(e.key == "Left" || e.key == "ArrowLeft") {
-    leftPress = true;
-  }else if(e.key == "Up" || e.key == "ArrowUp") {
-    upPress = true;
-  }else if(e.key == "Down" || e.key == "ArrowDown") {
-    downPress = true;
-  }
-}
-
-function keyUp(e){
-  if(e.key == "Right" || e.key == "ArrowRight") {
-    rightPress = false;
-  }
-  else if(e.key == "Left" || e.key == "ArrowLeft") {
-    leftPress = false;
-  }else if(e.key == "Up" || e.key == "ArrowUp") {
-    upPress = false;
-  }else if(e.key == "Down" || e.key == "ArrowDown") {
-    downPress = false;
-  }
-}
 
 window.onload = init;
