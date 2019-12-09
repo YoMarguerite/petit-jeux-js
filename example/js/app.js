@@ -1,11 +1,12 @@
-var canvas, stage, af, stars=[], hero, balls=[], shelter, stats;
+var canvas, stage, af, stars=[], hero, balls=[], explodeBalls=[], room, shelter, stats;
 
 var STARS = 'assets/stars.png?v=4',
     STAR = 'assets/star.png?v=4',
     SHELTER = 'assets/shelter.png?v=4',
     COSMO = 'assets/cosmo.png',
     GUN = 'assets/revolver.png',
-    FIRE = 'assets/fire.png';
+    FIRE = 'assets/fire.png',
+    WALL = 'assets/wall.png';
 
 
 pixelCollision = ndgmr.checkPixelCollision;
@@ -32,17 +33,18 @@ function init() {
   af.onComplete = function() {
      imagesLoaded();
   }
-  af.loadAssets([STAR,STARS,SHELTER,COSMO,GUN,FIRE]);
+  af.loadAssets([STAR,STARS,SHELTER,COSMO,GUN,FIRE,WALL]);
 }
- 
-// creating a Bitmap with that image 
-// and adding the Bitmap to the stage 
-function imagesLoaded(e) {
+
+function initStats(){
   stats = new Stats();
   stats.domElement.style.position = 'absolute';
   stats.domElement.style.left = '0px';
   stats.domElement.style.top = '0px';
   document.body.appendChild( stats.domElement );
+}
+
+function initStars(){
   var ss = new createjs.SpriteSheet({images:[af[STARS]],frames: {width:30, height:22, count:4, regX: 0, regY:0}, animations:{blink:[0,3]}});
   for ( var c = 0; c < 100; c++ ) {
      if ( Math.random() < 0.2 ) {
@@ -80,7 +82,9 @@ function imagesLoaded(e) {
      stage.addChild(star);
      stars.push(star);
   }
+}
 
+function initHero(){
   var persoss = new createjs.SpriteSheet({
     images:[af[COSMO]],
     frames: {width:26, height:28, count:3, regX:13, regY:14}, 
@@ -94,15 +98,16 @@ function imagesLoaded(e) {
   let scale = size(10, canvas.height, 28);
   perso.scaleX = scale;
   perso.scaleY = scale;
+  perso.name = 'hero';
 
   perso.move = function(){
     if((upPress)||(downPress)||(leftPress)||(rightPress)){
-      if(this._animation.name === 'head'){
+      if(this.currentAnimation === 'head'){
         this.gotoAndStop('head');
         this.gotoAndPlay('move');
       }
     }else{
-      if(this._animation.name === 'move'){
+      if(this.currentAnimation === 'move'){
         this.gotoAndStop('move');
         this.gotoAndPlay('head');
       }
@@ -125,6 +130,7 @@ function imagesLoaded(e) {
   gun.scaleX = scale;
   gun.scaleY = scale;
   gun.lastShoot = 0;
+  gun.name ='gun';
   gun.move = function(){
     let point = {
       adjacent:Math.sqrt(Math.pow(stage.mouseX-this.parent.x,2)),
@@ -135,36 +141,19 @@ function imagesLoaded(e) {
     
     let tick = createjs.Ticker.getTime();
     if(tick>(this.lastShoot+250)){
-      if(this._animation.name === 'shoot'){
+      if(this.currentAnimation === 'shoot'){
         this.gotoAndStop('shoot');
         this.gotoAndPlay('gun');
       }
     }
     if(boolDown){
-      if(tick>(this.lastShoot+1000)){
+      if(tick>(this.lastShoot+750)){
         this.lastShoot = tick;
-        if(this._animation.name === 'gun'){
+        if(this.currentAnimation === 'gun'){
           this.gotoAndStop('gun');
           this.gotoAndPlay('shoot');
         }
-        let ball = new createjs.Bitmap(af[FIRE]);
-        ball.x = hero.x;
-        ball.y = hero.y;
-        ball.scaleX = Math.sign(hero.scaleX)*this.scaleX;
-        ball.scaleY = this.scaleY;
-        ball.rotation = Math.sign(hero.scaleX)*hero.children[1].rotation;
-        let dx = stage.mouseX-ball.x;
-        var dy = stage.mouseY-ball.y;
-        var divise = Math.sqrt(Math.pow(dx,2)+Math.pow(dy,2));
-        ball.velX = dx/divise;
-        ball.velY = dy/divise;
-        ball.speed = 5;
-        ball.move = function(){
-          this.x += this.velX*5;
-          this.y += this.velY*5; 
-        }
-        stage.addChild(ball);
-        balls.push(ball);
+        initBall(this);
       }
     }
   };
@@ -197,14 +186,66 @@ function imagesLoaded(e) {
 
   stage.addChild(cont);
   hero = cont;
+}
 
+function initBall(gun){
+  let ballss = new createjs.SpriteSheet({
+    images:[af[FIRE]],
+    frames: {width:22,height:20,count:6,regX:11, regY:10},
+    animations:{
+      shoot:0,
+      explode:{frames:[1,2,3,4,5],speed:0.2,next:false}
+    }
+  });
+  let ball = new createjs.Sprite(ballss);
+  ball.x = hero.x;
+  ball.y = hero.y;
+  ball.scaleX = Math.sign(hero.scaleX)*gun.scaleX;
+  ball.scaleY = gun.scaleY;
+  ball.rotation = Math.sign(hero.scaleX)*hero.children[1].rotation;
+  let dx = stage.mouseX-ball.x;
+  var dy = stage.mouseY-ball.y;
+  var divise = Math.sqrt(Math.pow(dx,2)+Math.pow(dy,2));
+  ball.velX = dx/divise;
+  ball.velY = dy/divise;
+  ball.speed = 20;
+  ball.gotoAndPlay('shoot');
+  ball.move = function(){
+    this.x += this.velX*this.speed;
+    this.y += this.velY*this.speed;
+  }
+  stage.addChild(ball);
+  balls.push(ball);
+}
+
+function initShelter(){
   shelter = new createjs.Bitmap(af[SHELTER]);
   shelter.x = canvas.width/2;
   shelter.y = canvas.height/1.5;
   shelter.regX = shelter.image.width / 2;
   shelter.regY = shelter.image.height / 2;
   stage.addChild(shelter);
+}
 
+function initRoom(){
+  let wall = new createjs.Bitmap(af[WALL]);
+  wall.x = canvas.width/2;
+  wall.y = canvas.height/2;
+  wall.regX = wall.image.width / 2;
+  wall.regY = wall.image.height / 2;
+  stage.addChild(wall);
+  room = wall;
+}
+
+// creating a Bitmap with that image 
+// and adding the Bitmap to the stage 
+function imagesLoaded(e) {
+  initStats();
+  initStars();
+  initHero();
+  initShelter();
+  initRoom();
+  
   // set the Ticker to 30fps 
   createjs.Ticker.setFPS(30); 
   createjs.Ticker.addEventListener('tick', this.onTick.bind(this)); 
@@ -226,14 +267,27 @@ function onTick(e) {
       }
    }
    hero.move();
+   //console.log(pixelCollision(hero.getChildByName('hero'),room,window.alphaThresh));
 
-   balls.forEach((ball) => {
+   balls = balls.filter((ball) => {
      ball.move();
-   })
+     if(!pixelCollision(ball,room,window.alphaThresh)){
+       return ball;
+     }
+     ball.gotoAndStop('shoot');
+     ball.gotoAndPlay('explode');
+     explodeBalls.push(ball);
+   });
+
+   explodeBalls = explodeBalls.filter((ball) => {
+    if(ball.currentAnimationFrame > 4){
+      stage.removeChild(ball);
+    }else{
+      return ball;
+    }
+   });
    
   stage.update();
-  //shelter.x = stage.mouseX;
-  //shelter.y = stage.mouseY;
   
   stats.end();
 }
