@@ -1,10 +1,11 @@
-var canvas, stage, af, stars=[], hero, shelter, stats;
+var canvas, stage, af, stars=[], hero, balls=[], shelter, stats;
 
 var STARS = 'assets/stars.png?v=4',
     STAR = 'assets/star.png?v=4',
     SHELTER = 'assets/shelter.png?v=4',
     COSMO = 'assets/cosmo.png',
-    GUN = 'assets/revolver.png';
+    GUN = 'assets/revolver.png',
+    FIRE = 'assets/fire.png';
 
 
 pixelCollision = ndgmr.checkPixelCollision;
@@ -31,7 +32,7 @@ function init() {
   af.onComplete = function() {
      imagesLoaded();
   }
-  af.loadAssets([STAR,STARS,SHELTER,COSMO,GUN]);
+  af.loadAssets([STAR,STARS,SHELTER,COSMO,GUN,FIRE]);
 }
  
 // creating a Bitmap with that image 
@@ -119,7 +120,7 @@ function imagesLoaded(e) {
 
   var gun = new createjs.Sprite(gunss);
   gun.gotoAndPlay('gun');
-  scale = size(20, perso.spriteSheet._frameWidth*perso.scaleY, 15);
+  scale = size(25, perso.spriteSheet._frameWidth*perso.scaleY, 15);
   gun.y = 10;
   gun.scaleX = scale;
   gun.scaleY = scale;
@@ -133,7 +134,7 @@ function imagesLoaded(e) {
     *Math.acos(point.adjacent/point.hypothenuse)*180/Math.PI;
     
     let tick = createjs.Ticker.getTime();
-    if(tick>(this.lastShoot+500)){
+    if(tick>(this.lastShoot+250)){
       if(this._animation.name === 'shoot'){
         this.gotoAndStop('shoot');
         this.gotoAndPlay('gun');
@@ -146,11 +147,24 @@ function imagesLoaded(e) {
           this.gotoAndStop('gun');
           this.gotoAndPlay('shoot');
         }
-      }
-    }else{
-      if(this._animation.name === 'shoot'){
-        this.gotoAndStop('shoot');
-        this.gotoAndPlay('gun');
+        let ball = new createjs.Bitmap(af[FIRE]);
+        ball.x = hero.x;
+        ball.y = hero.y;
+        ball.scaleX = Math.sign(hero.scaleX)*this.scaleX;
+        ball.scaleY = this.scaleY;
+        ball.rotation = Math.sign(hero.scaleX)*hero.children[1].rotation;
+        let dx = stage.mouseX-ball.x;
+        var dy = stage.mouseY-ball.y;
+        var divise = Math.sqrt(Math.pow(dx,2)+Math.pow(dy,2));
+        ball.velX = dx/divise;
+        ball.velY = dy/divise;
+        ball.speed = 5;
+        ball.move = function(){
+          this.x += this.velX*5;
+          this.y += this.velY*5; 
+        }
+        stage.addChild(ball);
+        balls.push(ball);
       }
     }
   };
@@ -180,7 +194,6 @@ function imagesLoaded(e) {
       child.move();
     })
   };
-  console.log(gun)
 
   stage.addChild(cont);
   hero = cont;
@@ -205,7 +218,7 @@ function onTick(e) {
       star.move();
       
       var intersection = pixelCollision(shelter,star,window.alphaThresh);
-      if ( intersection ) {
+      if (intersection) {
          star.reset();
       }
       if ( star.y > canvas.height ) {
@@ -213,6 +226,10 @@ function onTick(e) {
       }
    }
    hero.move();
+
+   balls.forEach((ball) => {
+     ball.move();
+   })
    
   stage.update();
   //shelter.x = stage.mouseX;
