@@ -3,7 +3,7 @@ var canvas, stage, af, hero, balls=[], explodeBalls=[], room, stats;
 var COSMO = 'assets/cosmo.png',
     GUN = 'assets/revolver.png',
     FIRE = 'assets/fire.png',
-    WALL = 'assets/wall.png';
+    WALL = 'assets/wall2.png';
 
 
 pixelCollision = ndgmr.checkPixelCollision;
@@ -176,6 +176,10 @@ function initBall(gun){
 function initRoom(){
     let wall = new createjs.Bitmap(af[WALL]);
     wall.name='wall';
+    wall.scaleX = 3;
+    wall.scaleY = 3;
+    wall.regX = wall.image.width/2;
+    wall.regY = wall.image.height/2;
 
     room = new createjs.Container();
     room.addChild(wall);
