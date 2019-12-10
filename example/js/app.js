@@ -1,9 +1,6 @@
-var canvas, stage, af, stars=[], hero, balls=[], explodeBalls=[], room, shelter, stats;
+var canvas, stage, af, hero, balls=[], explodeBalls=[], room, stats;
 
-var STARS = 'assets/stars.png?v=4',
-    STAR = 'assets/star.png?v=4',
-    SHELTER = 'assets/shelter.png?v=4',
-    COSMO = 'assets/cosmo.png',
+var COSMO = 'assets/cosmo.png',
     GUN = 'assets/revolver.png',
     FIRE = 'assets/fire.png',
     WALL = 'assets/wall.png';
@@ -33,7 +30,7 @@ function init() {
     af.onComplete = function() {
         imagesLoaded();
     }
-    af.loadAssets([STAR,STARS,SHELTER,COSMO,GUN,FIRE,WALL]);
+    af.loadAssets([COSMO,GUN,FIRE,WALL]);
 }
 
 function initStats(){
@@ -44,47 +41,7 @@ function initStats(){
     document.body.appendChild( stats.domElement );
 }
 
-function initStars(){
-    var ss = new createjs.SpriteSheet({images:[af[STARS]],frames: {width:30, height:22, count:4, regX: 0, regY:0}, animations:{blink:[0,3]}});
-    for ( var c = 0; c < 100; c++ ) {
-        if ( Math.random() < 0.2 ) {
-            var star = new createjs.Sprite(ss);
-            star.spriteSheet.getAnimation('blink').speed = 1/((Math.random()*3+3)|0);
-            star.gotoAndPlay('blink');
-            if( Math.random() < 0.5 ) star.advance();
-        } else {
-            star = new createjs.Bitmap(af[STAR]);
-            if ( Math.random() < 0.66 ) {
-                star.sourceRect = new createjs.Rectangle(0,0,star.image.width/2,star.image.height/2);
-            } else if ( Math.random() < 0.33 ) {
-                star.sourceRect = new createjs.Rectangle(0,0,star.image.width/2,star.image.height);
-            }
-        }
-        star.x = Math.random()*canvas.width;
-        star.y = Math.random()*canvas.height;
-        star.regX = 25;
-        star.regY = 25;
-        star.velY = Math.random()*1.5+1;
-        star.rotVel = Math.random()*4-2;
-        star.scaleX = star.scaleY = Math.random()*.5+.5;
-        star.rotation = Math.random() * 360;
-
-        star.move = function(){
-            this.y+=this.velY;
-            this.rotatio += this.rotVel;
-        }
-
-        star.reset = function(){
-            this.y = -15 - Math.random()*15;
-            this.x = Math.random()*canvas.width;
-        }
-
-        stage.addChild(star);
-        stars.push(star);
-    }
-}
-
-function initHero(){
+function initPerso(){
     var persoss = new createjs.SpriteSheet({
         images:[af[COSMO]],
         frames: {width:26, height:28, count:3, regX:13, regY:14}, 
@@ -113,7 +70,10 @@ function initHero(){
             }
         }
     };
+    return perso;
+}
 
+function initGun(perso){
     var gunss = new createjs.SpriteSheet({
         images:[af[GUN]],
         frames: {width:30,height:15,count:2,regX:4, regY:8},
@@ -157,40 +117,21 @@ function initHero(){
             }
         }
     };
+    return gun;
+}
+
+function initHero(){
+    
+    var perso = initPerso();
+    var gun = initGun(perso);
 
     var cont = new createjs.Container();
     cont.addChild(perso);
     cont.addChild(gun);
-    cont.x = 200;
-    cont.y = 100;
-    cont.velX = 5;
-    cont.velY = 5;
+    cont.x = canvas.width/2;
+    cont.y = canvas.height/2;
+    
     cont.move = function(){
-      let clone = this.clone(true);
-          if(upPress){
-            clone.y -= this.velY;
-            if(!pixelCollision(clone.getChildByName('hero'),room,window.alphaThresh)) {
-              this.y-=this.velY;
-            }
-          }
-          if(downPress){
-            clone.y+=this.velY;
-            if(!pixelCollision(clone.getChildByName('hero'),room,window.alphaThresh)) {
-              this.y+=this.velY;
-            }
-          }
-          if(leftPress){
-            clone.x-=this.velX;
-            if(!pixelCollision(clone.getChildByName('hero'),room,window.alphaThresh)) {
-              this.x-=this.velX;
-            }
-          }
-          if(rightPress){
-            clone.x+= this.velX;
-            if(!pixelCollision(clone.getChildByName('hero'),room,window.alphaThresh)) {
-              this.x+=this.velX;
-            }
-          }
         this.scaleX = stage.mouseX < this.x ? -this.scaleY : this.scaleY;
         this.children.forEach((child) => {
             child.move();
@@ -211,14 +152,14 @@ function initBall(gun){
         }
     });
     let ball = new createjs.Sprite(ballss);
-    ball.x = hero.x;
-    ball.y = hero.y;
+    ball.x = hero.x-room._matrix.tx;
+    ball.y = hero.y-room._matrix.ty;
     ball.scaleX = Math.sign(hero.scaleX)*gun.scaleX;
     ball.scaleY = gun.scaleY;
     ball.rotation = Math.sign(hero.scaleX)*hero.children[1].rotation;
-    let dx = stage.mouseX-ball.x;
-    var dy = stage.mouseY-ball.y;
-    var divise = Math.sqrt(Math.pow(dx,2)+Math.pow(dy,2));
+    let dx = stage.mouseX-hero.x;
+    let dy = stage.mouseY-hero.y;
+    let divise = Math.sqrt(Math.pow(dx,2)+Math.pow(dy,2));
     ball.velX = dx/divise;
     ball.velY = dy/divise;
     ball.speed = 20;
@@ -229,34 +170,57 @@ function initBall(gun){
     }
     stage.addChild(ball);
     balls.push(ball);
-}
-
-function initShelter(){
-    shelter = new createjs.Bitmap(af[SHELTER]);
-    shelter.x = canvas.width/2;
-    shelter.y = canvas.height/1.5;
-    shelter.regX = shelter.image.width / 2;
-    shelter.regY = shelter.image.height / 2;
-    stage.addChild(shelter);
+    room.addChild(ball);
 }
 
 function initRoom(){
     let wall = new createjs.Bitmap(af[WALL]);
-    wall.x = canvas.width/2;
-    wall.y = canvas.height/2;
-    wall.regX = wall.image.width / 2;
-    wall.regY = wall.image.height / 2;
-    stage.addChild(wall);
-    room = wall;
+    wall.name='wall';
+
+    room = new createjs.Container();
+    room.addChild(wall);
+    room.x = canvas.width/2;
+    room.y = canvas.height/2;
+    room.regX = wall.image.width / 2;
+    room.regY = wall.image.height / 2;
+    room.velX = 5;
+    room.velY = 5;
+    room.move = function() {
+        let clone = this.clone(true);
+          if(upPress){
+            clone.y += this.velY;
+            if(!pixelCollision(clone.getChildByName('wall'),hero.getChildByName('hero'),window.alphaThresh)) {
+              this.y+=this.velY;
+            }
+          }
+          if(downPress){
+            clone.y-=this.velY;
+            if(!pixelCollision(clone.getChildByName('wall'),hero.getChildByName('hero'),window.alphaThresh)) {
+              this.y-=this.velY;
+            }
+          }
+          if(leftPress){
+            clone.x+=this.velX;
+            if(!pixelCollision(clone.getChildByName('wall'),hero.getChildByName('hero'),window.alphaThresh)) {
+              this.x+=this.velX;
+            }
+          }
+          if(rightPress){
+            clone.x-=this.velX;
+            if(!pixelCollision(clone.getChildByName('wall'),hero.getChildByName('hero'),window.alphaThresh)) {
+              this.x-=this.velX;
+            }
+          }
+    };
+
+    stage.addChild(room);
 }
 
 // creating a Bitmap with that image 
 // and adding the Bitmap to the stage 
 function imagesLoaded(e) {
     initStats();
-    initStars();
     initHero();
-    initShelter();
     initRoom();
 
     // set the Ticker to 30fps 
@@ -267,24 +231,12 @@ function imagesLoaded(e) {
 // update the stage every frame 
 function onTick(e) {
     stats.begin();
-    for ( var c = 0; c < stars.length; c++ ) {
-        var star = stars[c];
-        star.move();
-
-        var intersection = pixelCollision(shelter,star,window.alphaThresh);
-        if (intersection) {
-            star.reset();
-        }
-        if ( star.y > canvas.height ) {
-            star.reset();
-        }
-    }
     hero.move();
-    //console.log(pixelCollision(hero.getChildByName('hero'),room,window.alphaThresh));
+    room.move();
 
     balls = balls.filter((ball) => {
         ball.move();
-        if(!pixelCollision(ball,room,window.alphaThresh)){
+        if(!pixelCollision(ball,room.getChildByName('wall'),window.alphaThresh)){
             return ball;
         }
         ball.gotoAndStop('shoot');
