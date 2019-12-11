@@ -152,16 +152,22 @@ function initBall(gun){
         }
     });
     let ball = new createjs.Sprite(ballss);
-    ball.x = hero.x-room._matrix.tx;
-    ball.y = hero.y-room._matrix.ty;
+    
     ball.scaleX = Math.sign(hero.scaleX)*gun.scaleX;
     ball.scaleY = gun.scaleY;
+
     ball.rotation = Math.sign(hero.scaleX)*hero.children[1].rotation;
+
     let dx = stage.mouseX-hero.x;
     let dy = stage.mouseY-hero.y;
     let divise = Math.sqrt(Math.pow(dx,2)+Math.pow(dy,2));
+
     ball.velX = dx/divise;
     ball.velY = dy/divise;
+
+    ball.x = hero.x-room._matrix.tx//+(ball.velX*22*ball.scaleX);
+    ball.y = hero.y-room._matrix.ty//+(ball.velY*5*ball.scaleY);
+
     ball.speed = 20;
     ball.gotoAndPlay('shoot');
     ball.move = function(){
