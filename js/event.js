@@ -10,14 +10,14 @@ function onMouseUp(e) {
 }
 
 function keyDown(e){
-  if(e.key == "Right" || e.key == "ArrowRight") {
+  if(e.key == "Right" || e.key == "ArrowRight" || e.key.toLowerCase() == "d") {
     rightPress = true;
   }
-  else if(e.key == "Left" || e.key == "ArrowLeft") {
+  else if(e.key == "Left" || e.key == "ArrowLeft" || e.key.toLowerCase() == "q") {
     leftPress = true;
-  }else if(e.key == "Up" || e.key == "ArrowUp") {
+  }else if(e.key == "Up" || e.key == "ArrowUp" || e.key.toLowerCase() == "z") {
     upPress = true;
-  }else if(e.key == "Down" || e.key == "ArrowDown") {
+  }else if(e.key == "Down" || e.key == "ArrowDown" || e.key.toLowerCase() == "s") {
     downPress = true;
   }
 }
