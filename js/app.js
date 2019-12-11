@@ -1,9 +1,11 @@
-var canvas, stage, af, hero, balls=[], explodeBalls=[], room, stats;
+var canvas, stage, af, hero, balls=[], explodeBalls=[], boxs=[], room, stats;
 
 var COSMO = 'assets/cosmo.png',
     GUN = 'assets/revolver.png',
     FIRE = 'assets/fire.png',
-    WALL = 'assets/wall2.png';
+    WALL = 'assets/wall3.png',
+    GROUND = 'assets/ground.png',
+    BOX = 'assets/box.png';
 
 
 pixelCollision = ndgmr.checkPixelCollision;
@@ -30,7 +32,7 @@ function init() {
     af.onComplete = function() {
         imagesLoaded();
     }
-    af.loadAssets([COSMO,GUN,FIRE,WALL]);
+    af.loadAssets([COSMO,GUN,FIRE,WALL,GROUND,BOX]);
 }
 
 function initStats(){
@@ -152,22 +154,16 @@ function initBall(gun){
         }
     });
     let ball = new createjs.Sprite(ballss);
-    
+    ball.x = hero.x-room._matrix.tx;
+    ball.y = hero.y-room._matrix.ty;
     ball.scaleX = Math.sign(hero.scaleX)*gun.scaleX;
     ball.scaleY = gun.scaleY;
-
     ball.rotation = Math.sign(hero.scaleX)*hero.children[1].rotation;
-
     let dx = stage.mouseX-hero.x;
     let dy = stage.mouseY-hero.y;
     let divise = Math.sqrt(Math.pow(dx,2)+Math.pow(dy,2));
-
     ball.velX = dx/divise;
     ball.velY = dy/divise;
-
-    ball.x = hero.x-room._matrix.tx//+(ball.velX*22*ball.scaleX);
-    ball.y = hero.y-room._matrix.ty//+(ball.velY*5*ball.scaleY);
-
     ball.speed = 20;
     ball.gotoAndPlay('shoot');
     ball.move = function(){
@@ -180,42 +176,37 @@ function initBall(gun){
 }
 
 function initRoom(){
-    let wall = new createjs.Bitmap(af[WALL]);
-    wall.name='wall';
-    wall.scaleX = 3;
-    wall.scaleY = 3;
-    wall.regX = wall.image.width/2;
-    wall.regY = wall.image.height/2;
 
     room = new createjs.Container();
-    room.addChild(wall);
+    
     room.x = canvas.width/2;
     room.y = canvas.height/2;
-    room.regX = wall.image.width / 2;
-    room.regY = wall.image.height / 2;
     room.velX = 5;
     room.velY = 5;
     room.move = function() {
-        let clone = this.clone(true);
           if(upPress){
+            let clone = this.clone(true);
             clone.y += this.velY;
             if(!pixelCollision(clone.getChildByName('wall'),hero.getChildByName('hero'),window.alphaThresh)) {
               this.y+=this.velY;
             }
           }
           if(downPress){
+            let clone = this.clone(true);
             clone.y-=this.velY;
             if(!pixelCollision(clone.getChildByName('wall'),hero.getChildByName('hero'),window.alphaThresh)) {
               this.y-=this.velY;
             }
           }
           if(leftPress){
+            let clone = this.clone(true);
             clone.x+=this.velX;
             if(!pixelCollision(clone.getChildByName('wall'),hero.getChildByName('hero'),window.alphaThresh)) {
               this.x+=this.velX;
             }
           }
           if(rightPress){
+            let clone = this.clone(true);
             clone.x-=this.velX;
             if(!pixelCollision(clone.getChildByName('wall'),hero.getChildByName('hero'),window.alphaThresh)) {
               this.x-=this.velX;
@@ -226,12 +217,55 @@ function initRoom(){
     stage.addChild(room);
 }
 
+function initGround(){
+    let ground = new createjs.Bitmap(af[GROUND]);
+    ground.name='ground';
+    ground.scaleX = 3;
+    ground.scaleY = 3;
+    room.addChild(ground);
+    room.regX = ground.image.width/2*3;
+    room.regY = ground.image.height/2*3;
+}
+
+function initBox(x,y){
+    let box = new createjs.Bitmap(af[BOX]);
+    box.name='box';
+    box.scaleX = 3;
+    box.scaleY = 3;
+    box.x = x;
+    box.y = y;
+    room.addChild(box);
+    boxs.push(box);
+}
+
+function initWall(){
+    let wall = new createjs.Bitmap(af[WALL]);
+    wall.name='wall';
+    wall.scaleX = 3;
+    wall.scaleY = 3;
+    room.addChild(wall);
+}
+
 // creating a Bitmap with that image 
 // and adding the Bitmap to the stage 
 function imagesLoaded(e) {
+    initRoom();
+    initGround();
     initStats();
     initHero();
-    initRoom();
+    initWall();
+
+    initBox(4*3*15,6*3*15);
+    initBox(5*3*15,6*3*15);
+
+    initBox(4*3*15,7*3*15);
+    initBox(5*3*15,7*3*15);
+
+    initBox(12*3*15,4*3*15);
+    initBox(13*3*15,4*3*15);
+
+    initBox(12*3*15,3*3*15);
+    initBox(13*3*15,3*3*15);
 
     // set the Ticker to 30fps 
     createjs.Ticker.setFPS(30); 
@@ -246,17 +280,34 @@ function onTick(e) {
 
     balls = balls.filter((ball) => {
         ball.move();
-        if(!pixelCollision(ball,room.getChildByName('wall'),window.alphaThresh)){
-            return ball;
+        let bool = true;
+
+        if(pixelCollision(ball,room.getChildByName('wall'),window.alphaThresh)){
+            bool = false;
         }
-        ball.gotoAndStop('shoot');
-        ball.gotoAndPlay('explode');
-        explodeBalls.push(ball);
+
+        boxs = boxs.filter((box) => {
+            if(pixelCollision(ball,box,window.alphaThresh)){
+                bool = false;
+                room.removeChild(box);
+            }else{
+                return box;
+            }
+        })
+        
+        if(bool){
+            return ball;
+        }else{
+            ball.gotoAndStop('shoot');
+            ball.gotoAndPlay('explode');
+            explodeBalls.push(ball);
+        }
     });
 
     explodeBalls = explodeBalls.filter((ball) => {
         if(ball.currentAnimationFrame > 4){
             stage.removeChild(ball);
+            room.removeChild(ball)
         }else{
             return ball;
         }
