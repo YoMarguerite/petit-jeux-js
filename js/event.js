@@ -23,14 +23,15 @@ function keyDown(e){
 }
 
 function keyUp(e){
-  if(e.key == "Right" || e.key == "ArrowRight") {
+  console .log(e)
+  if(e.key == "Right" || e.key == "ArrowRight" || e.key.toLowerCase() == "d") {
     rightPress = false;
   }
-  else if(e.key == "Left" || e.key == "ArrowLeft") {
+  else if(e.key == "Left" || e.key == "ArrowLeft" || e.key.toLowerCase() == "q") {
     leftPress = false;
-  }else if(e.key == "Up" || e.key == "ArrowUp") {
+  }else if(e.key == "Up" || e.key == "ArrowUp" || e.key.toLowerCase() == "z") {
     upPress = false;
-  }else if(e.key == "Down" || e.key == "ArrowDown") {
+  }else if(e.key == "Down" || e.key == "ArrowDown" || e.key.toLowerCase() == "s") {
     downPress = false;
   }
 }
