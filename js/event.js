@@ -23,7 +23,6 @@ function keyDown(e){
 }
 
 function keyUp(e){
-  console .log(e)
   if(e.key == "Right" || e.key == "ArrowRight" || e.key.toLowerCase() == "d") {
     rightPress = false;
   }

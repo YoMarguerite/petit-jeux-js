@@ -150,7 +150,7 @@ function initBall(gun){
         frames: {width:22,height:20,count:6,regX:11, regY:10},
         animations:{
             shoot:0,
-            explode:{frames:[1,2,3,4,5],speed:0.2,next:false}
+            explode:{frames:[1,2,3,4,5],speed:0.5,next:false}
         }
     });
     let ball = new createjs.Sprite(ballss);
@@ -165,6 +165,7 @@ function initBall(gun){
     ball.velX = dx/divise;
     ball.velY = dy/divise;
     ball.speed = 20;
+    ball.damage = 1;
     ball.gotoAndPlay('shoot');
     ball.move = function(){
         this.x += this.velX*this.speed;
@@ -184,32 +185,33 @@ function initRoom(){
     room.velX = 5;
     room.velY = 5;
     room.move = function() {
+        let ref = hero.getChildByName('hero');
           if(upPress){
             let clone = this.clone(true);
             clone.y += this.velY;
-            if(!pixelCollision(clone.getChildByName('wall'),hero.getChildByName('hero'),window.alphaThresh)) {
-              this.y+=this.velY;
+            if(!collision(clone,ref)){
+                this.y+=this.velY;
             }
           }
           if(downPress){
             let clone = this.clone(true);
             clone.y-=this.velY;
-            if(!pixelCollision(clone.getChildByName('wall'),hero.getChildByName('hero'),window.alphaThresh)) {
-              this.y-=this.velY;
+            if(!collision(clone,ref)){
+                this.y-=this.velY;
             }
           }
           if(leftPress){
             let clone = this.clone(true);
             clone.x+=this.velX;
-            if(!pixelCollision(clone.getChildByName('wall'),hero.getChildByName('hero'),window.alphaThresh)) {
-              this.x+=this.velX;
+            if(!collision(clone,ref)){
+                this.x+=this.velX;
             }
           }
           if(rightPress){
             let clone = this.clone(true);
             clone.x-=this.velX;
-            if(!pixelCollision(clone.getChildByName('wall'),hero.getChildByName('hero'),window.alphaThresh)) {
-              this.x-=this.velX;
+            if(!collision(clone,ref)){
+                this.x-=this.velX;
             }
           }
     };
@@ -228,14 +230,31 @@ function initGround(){
 }
 
 function initBox(x,y){
-    let box = new createjs.Bitmap(af[BOX]);
+    let boxss = new createjs.SpriteSheet({
+        images:[af[BOX]],
+        frames: {width:15,height:15,count:4},
+        animations:{
+            four:0,
+            three:1,
+            two:2,
+            one:3
+        }
+    });
+    let box = new createjs.Sprite(boxss);
+    box.gotoAndPlay('four');
     box.name='box';
     box.scaleX = 3;
     box.scaleY = 3;
     box.x = x;
     box.y = y;
+    box.life = 3;
+    box.tabAnim = ['one','two','three','four'];
+    box.takeDamage = function(damage){
+        this.life = damage>this.life ? 0 : this.life-damage;
+        this.gotoAndPlay(this.tabAnim[this.life]);
+    };
     room.addChild(box);
-    boxs.push(box);
+    boxs.push(room.getChildIndex(box));
 }
 
 function initWall(){
@@ -269,7 +288,7 @@ function imagesLoaded(e) {
 
     // set the Ticker to 30fps 
     createjs.Ticker.setFPS(30); 
-    createjs.Ticker.addEventListener('tick', this.onTick.bind(this)); 
+    createjs.Ticker.addEventListener('tick', this.onTick.bind(this));
 }
 
 // update the stage every frame 
@@ -280,22 +299,8 @@ function onTick(e) {
 
     balls = balls.filter((ball) => {
         ball.move();
-        let bool = true;
-
-        if(pixelCollision(ball,room.getChildByName('wall'),window.alphaThresh)){
-            bool = false;
-        }
-
-        boxs = boxs.filter((box) => {
-            if(pixelCollision(ball,box,window.alphaThresh)){
-                bool = false;
-                room.removeChild(box);
-            }else{
-                return box;
-            }
-        })
         
-        if(bool){
+        if(!collision(room,ball,ball.damage)){
             return ball;
         }else{
             ball.gotoAndStop('shoot');
@@ -316,6 +321,27 @@ function onTick(e) {
     stage.update();
   
     stats.end();
+}
+
+function collision(object, ref, damage){
+    let bool = pixelCollision(object.getChildByName('wall'),ref,window.alphaThresh);
+    erase = boxs.find((index) => {
+        let box = object.getChildAt(index);
+        if(pixelCollision(box,ref,window.alphaThresh)){
+            bool = true;
+            if(damage != undefined){
+                box.takeDamage(damage);
+                if(box.life===0){
+                    return true;
+                }
+            }
+        }
+    })
+    if(erase != undefined){
+        let index = boxs.indexOf(erase);
+        boxs.splice(index,1);
+    }
+    return bool;
 }
 
 function size(factor, ref, size){
