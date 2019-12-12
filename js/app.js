@@ -1,8 +1,9 @@
-var canvas, stage, af, hero, balls=[], explodeBalls=[], boxs=[], room, stats, scale;
+var canvas, stage, af, hero, balls=[], explodeBalls=[], boxs=[], room, stats;
 
 var COSMO = 'assets/cosmo.png',
     GUN = 'assets/revolver.png',
     FIRE = 'assets/fire.png',
+    GOBELIN = 'assets/gobelin.png',
     WALL = 'assets/wall3.png',
     GROUND = 'assets/ground.png',
     BOX = 'assets/box.png';
@@ -32,7 +33,7 @@ function init() {
     af.onComplete = function() {
         imagesLoaded();
     }
-    af.loadAssets([COSMO,GUN,FIRE,WALL,GROUND,BOX]);
+    af.loadAssets([COSMO,GUN,FIRE,GOBELIN,WALL,GROUND,BOX]);
 }
 
 function initStats(){
@@ -54,7 +55,7 @@ function initPerso(){
   
     var perso = new createjs.Sprite(persoss);
     perso.gotoAndPlay('head');
-    scale = size(15, canvas.height, 28);
+    let scale = size(10, canvas.height, 28);
     perso.scaleX = scale;
     perso.scaleY = scale;
     perso.name = 'hero';
@@ -87,10 +88,10 @@ function initGun(perso){
 
     var gun = new createjs.Sprite(gunss);
     gun.gotoAndPlay('gun');
-    // let scale = size(25, perso.spriteSheet._frameWidth*perso.scaleY, 15);
+    scale = size(25, perso.spriteSheet._frameWidth*perso.scaleY, 15);
     gun.y = 10;
-    gun.scaleX = scale/2.5;
-    gun.scaleY = scale/2.5;
+    gun.scaleX = scale;
+    gun.scaleY = scale;
     gun.lastShoot = 0;
     gun.name ='gun';
     gun.move = function(){
@@ -176,13 +177,16 @@ function initBall(gun){
     room.addChild(ball);
 }
 
+function initGobelin(){
+    
+}
+
 function initRoom(){
 
     room = new createjs.Container();
-    room.x = 0;
-    room.y = 0;
-    // room.x = canvas.width/2;
-    // room.y = canvas.height/2;
+    
+    room.x = canvas.width/2;
+    room.y = canvas.height/2;
     room.velX = 5;
     room.velY = 5;
     room.move = function() {
@@ -223,9 +227,11 @@ function initRoom(){
 function initGround(){
     let ground = new createjs.Bitmap(af[GROUND]);
     ground.name='ground';
+    ground.scaleX = 3;
+    ground.scaleY = 3;
     room.addChild(ground);
-    room.regX = ground.image.width*scale;
-    room.regY = ground.image.height*scale;
+    room.regX = ground.image.width/2*3;
+    room.regY = ground.image.height/2*3;
 }
 
 function initBox(x,y){
@@ -242,6 +248,8 @@ function initBox(x,y){
     let box = new createjs.Sprite(boxss);
     box.gotoAndPlay('four');
     box.name='box';
+    box.scaleX = 3;
+    box.scaleY = 3;
     box.x = x;
     box.y = y;
     box.life = 3;
@@ -257,6 +265,8 @@ function initBox(x,y){
 function initWall(){
     let wall = new createjs.Bitmap(af[WALL]);
     wall.name='wall';
+    wall.scaleX = 3;
+    wall.scaleY = 3;
     room.addChild(wall);
 }
 
@@ -269,22 +279,17 @@ function imagesLoaded(e) {
     initHero();
     initWall();
 
-    initBox(4*(scale)*15,6*(scale)*15);
-    initBox(5*(scale)*15,6*(scale)*15);
+    initBox(4*3*15,6*3*15);
+    initBox(5*3*15,6*3*15);
 
-    initBox(4*(scale)*15,7*(scale)*15);
-    initBox(5*(scale)*15,7*(scale)*15);
+    initBox(4*3*15,7*3*15);
+    initBox(5*3*15,7*3*15);
 
-    initBox(12*(scale)*15,4*(scale)*15);
-    initBox(13*(scale)*15,4*(scale)*15);
+    initBox(12*3*15,4*3*15);
+    initBox(13*3*15,4*3*15);
 
-    initBox(12*(scale)*15,3*(scale)*15);
-    initBox(13*(scale)*15,3*(scale)*15);
-
-    room.children.forEach((child) => {
-        child.scaleX = scale;
-        child.scaleY = scale;
-    });
+    initBox(12*3*15,3*3*15);
+    initBox(13*3*15,3*3*15);
 
     // set the Ticker to 30fps 
     createjs.Ticker.setFPS(30); 
@@ -331,7 +336,7 @@ function collision(object, ref, damage){
             bool = true;
             if(damage != undefined){
                 box.takeDamage(damage);
-                if(box.life===0){
+                if(box.life === 0){
                     return true;
                 }
             }
