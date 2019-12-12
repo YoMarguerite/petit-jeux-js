@@ -1,4 +1,4 @@
-var canvas, stage, af, hero, balls=[], explodeBalls=[], boxs=[], room, stats, scale;
+var canvas, stage, af, hero, enemies=[], balls=[], explodeBalls=[], boxs=[], room, stats, scale;
 
 var COSMO = 'assets/cosmo.png',
     GUN = 'assets/revolver.png',
@@ -173,7 +173,6 @@ function initBall(gun){
         this.x += this.velX*this.speed;
         this.y += this.velY*this.speed;
     }
-    stage.addChild(ball);
     balls.push(ball);
     room.addChild(ball);
 }
@@ -181,11 +180,44 @@ function initBall(gun){
 function initGobelin(){
     var gobelinss = new createjs.SpriteSheet({
         images:[af[GOBELIN]],
-        frames: {width:26, height:28, count:4, regX:13, regY:14}, 
+        frames: {width:26, height:28, count:5, regX:13, regY:14}, 
         animations:{
             head:{frames:[0,1],speed:0.15}, 
-            move:{frames:[0,2],speed:0.15}}
+            move:{frames:[0,2],speed:0.15},
+            damage:3,
+            dead:4
+        }
     });
+
+    var gobelin = new createjs.Sprite(gobelinss);
+    gobelin.gotoAndPlay('head');
+    gobelin.x = 4*scale*15;
+    gobelin.y = 15*scale*15;
+    gobelin.speed = 5;
+    gobelin.life = 5;
+    gobelin.lastShoot = 0;
+
+    gobelin.takeDamage = function(damage){
+        this.life -= damage;
+        if(this.life <= 0){
+            this.life = 0;
+            let index = enemies.indexOf(this);
+            enemies.splice(index,1);
+            this.gotoAndPlay('dead');
+        }else{
+            this.lastShoot = createjs.Ticker.getTime();
+            this.gotoAndPlay('damage');
+        }
+    };
+
+    gobelin.move = function(){
+        if(createjs.Ticker.getTime()>this.lastShoot+250&&this.currentAnimation==='damage'){
+            this.gotoAndPlay('head');
+        }
+    };
+    
+    room.addChild(gobelin);
+    enemies.push(gobelin);
 }
 
 function initRoom(){
@@ -238,7 +270,7 @@ function initGround(){
 function initBox(x,y){
     let boxss = new createjs.SpriteSheet({
         images:[af[BOX]],
-        frames: {width:15,height:15,count:4,regX:0,regY:0},
+        frames: {width:15,height:15,count:4,regX:7.5,regY:7.5},
         animations:{
             four:0,
             three:1,
@@ -280,18 +312,19 @@ function imagesLoaded(e) {
     initStats();
     initHero();
     initWall();
+    initGobelin();
 
-    initBox(4*scale*15,6*scale*15);
-    initBox(5*scale*15,6*scale*15);
+    initBox(4.5*scale*15,6.5*scale*15);
+    initBox(5.5*scale*15,6.5*scale*15);
 
-    initBox(4*scale*15,7*scale*15);
-    initBox(5*scale*15,7*scale*15);
+    initBox(4.5*scale*15,7.5*scale*15);
+    initBox(5.5*scale*15,7.5*scale*15);
 
-    initBox(12*scale*15,4*scale*15);
-    initBox(13*scale*15,4*scale*15);
+    initBox(12.5*scale*15,4.5*scale*15);
+    initBox(13.5*scale*15,4.5*scale*15);
 
-    initBox(12*scale*15,3*scale*15);
-    initBox(13*scale*15,3*scale*15);
+    initBox(12.5*scale*15,3.5*scale*15);
+    initBox(13.5*scale*15,3.5*scale*15);
 
     let ground = room.getChildByName('ground');
     room.children.forEach((child) => {
@@ -312,16 +345,19 @@ function onTick(e) {
     hero.move();
     room.move();
 
+    enemies.forEach((en) =>{
+        en.move();
+    })
+
     balls = balls.filter((ball) => {
         ball.move();
         
-        if(!collision(room,ball,ball.damage)){
+        if(!collision(room,ball,ball.damage)&&(!collisionEnemies(ball))){
             return ball;
-        }else{
-            ball.gotoAndStop('shoot');
-            ball.gotoAndPlay('explode');
-            explodeBalls.push(ball);
         }
+        ball.gotoAndStop('shoot');
+        ball.gotoAndPlay('explode');
+        explodeBalls.push(ball);
     });
 
     explodeBalls = explodeBalls.filter((ball) => {
@@ -338,9 +374,19 @@ function onTick(e) {
     stats.end();
 }
 
+function collisionEnemies(ball){
+    index = enemies.find((en)=> {
+        if(pixelCollision(ball,en,window.alphaThresh)){
+            en.takeDamage(ball.damage);
+            return true;
+        }
+    });
+    return (index);
+}
+
 function collision(object, ref, damage){
     let bool = pixelCollision(object.getChildByName('wall'),ref,window.alphaThresh);
-    erase = boxs.find((index) => {
+    let erase = boxs.find((index) => {
         let box = object.getChildAt(index);
         if(pixelCollision(box,ref,window.alphaThresh)){
             bool = true;
