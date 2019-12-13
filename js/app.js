@@ -90,12 +90,20 @@ function initGun(perso){
 
     var gun = new createjs.Sprite(gunss);
     gun.gotoAndPlay('gun');
-    size = size(25, perso.spriteSheet._frameWidth*perso.scaleY, 15);
-    gun.y = 10;
-    gun.scaleX = size;
-    gun.scaleY = size;
+    let gunsize = size(25, perso.spriteSheet._frameWidth*perso.scaleY, 15);
+    gun.scaleX = gunsize;
+    gun.scaleY = gunsize;
     gun.lastShoot = 0;
     gun.name ='gun';
+    
+    return gun;
+}
+
+function initHero(){
+    
+    var perso = initPerso();
+    var gun = initGun(perso);
+    gun.y = 10;
     gun.move = function(){
         let point = {
             adjacent:Math.sqrt(Math.pow(stage.mouseX-this.parent.x,2)),
@@ -122,13 +130,6 @@ function initGun(perso){
             }
         }
     };
-    return gun;
-}
-
-function initHero(){
-    
-    var perso = initPerso();
-    var gun = initGun(perso);
 
     var cont = new createjs.Container();
     cont.addChild(perso);
@@ -222,20 +223,53 @@ function initGobelin(){
 function initEnemie(){
 
     let gobelin = initGobelin();
+    let gun = initGun(gobelin);
+    gun.y = 4;
+    gun.move = function(){
+        let point = {
+            adjacent:Math.sqrt(Math.pow(hero.x-(room.x-(this.parent.regX*this.parent.scaleX)+this.parent.x),2)),
+            hypothenuse:Math.sqrt(Math.pow(hero.x-(room.x-(this.parent.regX*this.parent.scaleX)+this.parent.x),2)+
+            Math.pow(hero.y-(room.y-(this.parent.regY*this.parent.scaleY)+this.parent.y),2))
+        };
+        this.rotation = Math.sign(this.scaleX)*Math.sign(hero.y-(room.y-(this.parent.regY*this.parent.scaleY)+this.parent.y))
+            *Math.acos(point.adjacent/point.hypothenuse)*180/Math.PI;
+    
+        let tick = createjs.Ticker.getTime();
+        if(tick>(this.lastShoot+250)){
+            if(this.currentAnimation === 'shoot'){
+                this.gotoAndStop('shoot');
+                this.gotoAndPlay('gun');
+            }
+        }
+        if(boolDown){
+            if(tick>(this.lastShoot+750)){
+                this.lastShoot = tick;
+                if(this.currentAnimation === 'gun'){
+                    this.gotoAndStop('gun');
+                    this.gotoAndPlay('shoot');
+                }
+                //initBall(this);
+            }
+        }
+    };
+
     let cont = new createjs.Container();
     cont.addChild(gobelin);
+    cont.addChild(gun);
     cont.x = 4*scale*15;
     cont.y = 15*scale*15;
     cont.name='gobelinContainer';
     cont.move = function(){
-        this.scaleX = hero.x < this.x ? -this.scaleY : this.scaleY;
+        let coef = Math.sign(hero.x-(room.x-(this.regX*this.scaleX)+this.x));
         this.children.forEach((child) => {
+            child.scaleX = coef*child.scaleY;
             child.move();
         })
     };
 
+    console.log(cont);
     room.addChild(cont);
-    enemies.push(cont);
+    enemies.push(gobelin);
 }
 
 function initRoom(){
@@ -396,6 +430,7 @@ function onTick(e) {
 }
 
 function collisionArray(array, ref){
+    //console.log(array);
     let index = array.find((el) => {
         if(pixelCollision(el,ref,window.alphaThresh)){
             if(ref.damage){
