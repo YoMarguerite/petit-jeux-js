@@ -123,11 +123,16 @@ function initHero(){
                     this.gotoAndStop('gun');
                     this.gotoAndPlay('shoot');
                 }
-                initBall(this,hero);
+                
+                let coef = Math.sign(this.parent.scaleX);
+                initBall(this.parent.x-room._matrix.tx,this.parent.y-room._matrix.ty,
+                    coef*this.scaleX,this.scaleY, coef*this.rotation,
+                    stage.mouseX-this.parent.x,stage.mouseY-this.parent.y,20);
             }
         }
     };
-
+console.log("GUN 1")
+console.log(gun)
     var cont = new createjs.Container();
     cont.addChild(perso);
     cont.addChild(gun);
@@ -145,7 +150,7 @@ function initHero(){
     hero = cont;
 }
 
-function initBall(gun,origin,destination){
+function initBall(x,y,scaleX,scaleY,rotation,dx,dy,speed=20,damage = 1){
     let ballss = new createjs.SpriteSheet({
         images:[af[FIRE]],
         frames: {width:22,height:20,count:6,regX:11, regY:10},
@@ -155,18 +160,18 @@ function initBall(gun,origin,destination){
         }
     });
     let ball = new createjs.Sprite(ballss);
-    ball.x = origin.x-room._matrix.tx;
-    ball.y = origin.y-room._matrix.ty;
-    ball.scaleX = Math.sign(origin.scaleX)*gun.scaleX;
-    ball.scaleY = gun.scaleY;
-    ball.rotation = Math.sign(origin.scaleX)*origin.children[1].rotation;
-    let dx = stage.mouseX-origin.x;
-    let dy = stage.mouseY-origin.y;
+
+    ball.x = x;
+    ball.y = y;
+    ball.scaleX = scaleX;
+    ball.scaleY = scaleY;
+    ball.rotation = rotation;
+
     let divise = Math.sqrt(Math.pow(dx,2)+Math.pow(dy,2));
     ball.velX = dx/divise;
     ball.velY = dy/divise;
-    ball.speed = 20;
-    ball.damage = 1;
+    ball.speed = speed;
+    ball.damage = damage;
     ball.gotoAndPlay('shoot');
     ball.move = function(){
         this.x += this.velX*this.speed;
@@ -174,6 +179,7 @@ function initBall(gun,origin,destination){
     }
     balls.push(ball);
     room.addChild(ball);
+    console.log(ball);
 }
 
 function initGobelin(){
@@ -241,11 +247,15 @@ function initEnemie(){
                     this.gotoAndStop('gun');
                     this.gotoAndPlay('shoot');
                 }
-                //initBall(this);
+                let coef = Math.sign(this.parent.scaleX);
+                initBall(this.parent.x,this.parent.y,
+                    coef*this.scaleX,this.scaleY, coef*this.rotation,
+                    x,y);
             }
         }
     };
-
+    console.log("GUN 2")
+    console.log(gun)
     let cont = new createjs.Container();
     cont.addChild(gobelin);
     cont.addChild(gun);
