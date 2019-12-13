@@ -105,12 +105,9 @@ function initHero(){
     var gun = initGun(perso);
     gun.y = 10;
     gun.move = function(){
-        let point = {
-            adjacent:Math.sqrt(Math.pow(stage.mouseX-this.parent.x,2)),
-            hypothenuse:Math.sqrt(Math.pow(stage.mouseX-this.parent.x,2)+Math.pow(stage.mouseY-this.parent.y,2))
-        };
-        this.rotation = Math.sign(this.scaleX)*Math.sign(stage.mouseY-this.parent.y)
-    *Math.acos(point.adjacent/point.hypothenuse)*180/Math.PI;
+        let x = stage.mouseX-this.parent.x;
+        let y = stage.mouseY-this.parent.y;
+        this.rotation = Math.sign(y)*rotation(x,y);
     
         let tick = createjs.Ticker.getTime();
         if(tick>(this.lastShoot+250)){
@@ -126,7 +123,7 @@ function initHero(){
                     this.gotoAndStop('gun');
                     this.gotoAndPlay('shoot');
                 }
-                initBall(this);
+                initBall(this,hero);
             }
         }
     };
@@ -148,7 +145,7 @@ function initHero(){
     hero = cont;
 }
 
-function initBall(gun){
+function initBall(gun,origin,destination){
     let ballss = new createjs.SpriteSheet({
         images:[af[FIRE]],
         frames: {width:22,height:20,count:6,regX:11, regY:10},
@@ -158,13 +155,13 @@ function initBall(gun){
         }
     });
     let ball = new createjs.Sprite(ballss);
-    ball.x = hero.x-room._matrix.tx;
-    ball.y = hero.y-room._matrix.ty;
-    ball.scaleX = Math.sign(hero.scaleX)*gun.scaleX;
+    ball.x = origin.x-room._matrix.tx;
+    ball.y = origin.y-room._matrix.ty;
+    ball.scaleX = Math.sign(origin.scaleX)*gun.scaleX;
     ball.scaleY = gun.scaleY;
-    ball.rotation = Math.sign(hero.scaleX)*hero.children[1].rotation;
-    let dx = stage.mouseX-hero.x;
-    let dy = stage.mouseY-hero.y;
+    ball.rotation = Math.sign(origin.scaleX)*origin.children[1].rotation;
+    let dx = stage.mouseX-origin.x;
+    let dy = stage.mouseY-origin.y;
     let divise = Math.sqrt(Math.pow(dx,2)+Math.pow(dy,2));
     ball.velX = dx/divise;
     ball.velY = dy/divise;
@@ -226,13 +223,9 @@ function initEnemie(){
     let gun = initGun(gobelin);
     gun.y = 4;
     gun.move = function(){
-        let point = {
-            adjacent:Math.sqrt(Math.pow(hero.x-(room.x-(this.parent.regX*this.parent.scaleX)+this.parent.x),2)),
-            hypothenuse:Math.sqrt(Math.pow(hero.x-(room.x-(this.parent.regX*this.parent.scaleX)+this.parent.x),2)+
-            Math.pow(hero.y-(room.y-(this.parent.regY*this.parent.scaleY)+this.parent.y),2))
-        };
-        this.rotation = Math.sign(this.scaleX)*Math.sign(hero.y-(room.y-(this.parent.regY*this.parent.scaleY)+this.parent.y))
-            *Math.acos(point.adjacent/point.hypothenuse)*180/Math.PI;
+        let x = hero.x-(room.x-(this.parent.regX*this.parent.scaleX)+this.parent.x);
+        let y = hero.y-(room.y-(this.parent.regY*this.parent.scaleY)+this.parent.y);
+        this.rotation = Math.sign(x*y)*rotation(x,y);
     
         let tick = createjs.Ticker.getTime();
         if(tick>(this.lastShoot+250)){
@@ -444,6 +437,14 @@ function collisionArray(array, ref){
 
 function collision(object, ref){
     return pixelCollision(object.getChildByName('wall'),ref,window.alphaThresh);
+}
+
+function rotation(x, y){
+    let point = {
+        adjacent:Math.sqrt(Math.pow(x,2)),
+        hypothenuse:Math.sqrt(Math.pow(x,2)+Math.pow(y,2))
+    };
+    return Math.acos(point.adjacent/point.hypothenuse)*180/Math.PI;
 }
 
 function size(factor, ref, size){
