@@ -55,10 +55,11 @@ function initPerso(){
   
     var perso = new createjs.Sprite(persoss);
     perso.gotoAndPlay('head');
+
     scale = size(10, canvas.height, 28);
-    console.log(scale);
     perso.scaleX = scale;
     perso.scaleY = scale;
+
     perso.name = 'hero';
 
     perso.move = function(){
@@ -82,8 +83,8 @@ function initGun(perso){
         images:[af[GUN]],
         frames: {width:30,height:15,count:2,regX:4, regY:8},
         animations:{
-            gun:0,
-            shoot:1,
+            gun:{frames:[0],next:false},
+            shoot:{frames:[1],next:false},
         }
     });
 
@@ -151,7 +152,7 @@ function initBall(gun){
         images:[af[FIRE]],
         frames: {width:22,height:20,count:6,regX:11, regY:10},
         animations:{
-            shoot:0,
+            shoot:{frames:[0],next:false},
             explode:{frames:[1,2,3,4,5],speed:0.5,next:false}
         }
     });
@@ -184,15 +185,13 @@ function initGobelin(){
         animations:{
             head:{frames:[0,1],speed:0.15}, 
             move:{frames:[0,2],speed:0.15},
-            damage:3,
-            dead:4
+            damage:{frames:[3],next:false},
+            dead:{frames:[4], next:false}
         }
     });
 
     var gobelin = new createjs.Sprite(gobelinss);
     gobelin.gotoAndPlay('head');
-    gobelin.x = 4*scale*15;
-    gobelin.y = 15*scale*15;
     gobelin.speed = 5;
     gobelin.life = 5;
     gobelin.lastShoot = 0;
@@ -216,8 +215,27 @@ function initGobelin(){
         }
     };
     
-    room.addChild(gobelin);
     enemies.push(gobelin);
+    return gobelin;
+}
+
+function initEnemie(){
+
+    let gobelin = initGobelin();
+    let cont = new createjs.Container();
+    cont.addChild(gobelin);
+    cont.x = 4*scale*15;
+    cont.y = 15*scale*15;
+    cont.name='gobelinContainer';
+    cont.move = function(){
+        this.scaleX = hero.x < this.x ? -this.scaleY : this.scaleY;
+        this.children.forEach((child) => {
+            child.move();
+        })
+    };
+
+    room.addChild(cont);
+    enemies.push(cont);
 }
 
 function initRoom(){
@@ -256,6 +274,8 @@ function initRoom(){
         if(!collision(clone,ref)&&(!collisionArray(array,ref))){
             this.y += y;
         }
+
+        this.getChildByName('gobelinContainer').move();
     };
 
     stage.addChild(room);
@@ -314,7 +334,7 @@ function imagesLoaded(e) {
     initStats();
     initHero();
     initWall();
-    initGobelin();
+    initEnemie();
 
     initBox(4.5*scale*15,6.5*scale*15);
     initBox(5.5*scale*15,6.5*scale*15);
