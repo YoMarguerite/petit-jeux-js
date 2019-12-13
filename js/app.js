@@ -227,35 +227,35 @@ function initRoom(){
     room.velX = 5;
     room.velY = 5;
     room.move = function() {
-        let ref = hero.getChildByName('hero');
-          if(upPress){
-            let clone = this.clone(true);
-            clone.y += this.velY;
-            if(!collision(clone,ref)){
-                this.y+=this.velY;
-            }
-          }
-          if(downPress){
-            let clone = this.clone(true);
-            clone.y-=this.velY;
-            if(!collision(clone,ref)){
-                this.y-=this.velY;
-            }
-          }
-          if(leftPress){
-            let clone = this.clone(true);
-            clone.x+=this.velX;
-            if(!collision(clone,ref)){
-                this.x+=this.velX;
-            }
-          }
-          if(rightPress){
-            let clone = this.clone(true);
-            clone.x-=this.velX;
-            if(!collision(clone,ref)){
-                this.x-=this.velX;
-            }
-          }
+        let ref = hero.getChildByName('hero'),x=0,y=0;
+        if(upPress){
+            y+=this.velY;
+        }
+        if(downPress){
+            y-=this.velY;
+        }
+        if(leftPress){
+            x+=this.velX;
+        }
+        if(rightPress){
+            x-=this.velX;
+        }
+        let clone = this.clone(true);
+        clone.x += x;
+        let array = clone.children.filter((child) => {
+            return (child.name === 'box')&&(child.currentAnimation!='one');
+        });
+        if(!collision(clone,ref)&&(!collisionArray(array,ref))){
+            this.x += x;
+        }
+        clone.x -= x;
+        clone.y += y;
+        array = clone.children.filter((child) => {
+            return (child.name === 'box')&&(child.currentAnimation!='one');
+        });
+        if(!collision(clone,ref)&&(!collisionArray(array,ref))){
+            this.y += y;
+        }
     };
 
     stage.addChild(room);
@@ -286,20 +286,22 @@ function initBox(x,y){
     box.life = 3;
     box.tabAnim = ['one','two','three','four'];
     box.takeDamage = function(damage){
-        this.life = damage>this.life ? 0 : this.life-damage;
+        this.life -= damage;
+        if(this.life <= 0){
+            this.life = 0;
+            let index = boxs.indexOf(this);
+            boxs.splice(index,1);
+        }
         this.gotoAndPlay(this.tabAnim[this.life]);
     };
     room.addChild(box);
-    boxs.push(room.getChildIndex(box));
+    boxs.push(box);
 }
 
 function initWall(){
     let wall = new createjs.Bitmap(af[WALL]);
     wall.name='wall';
-    room.addChild(wall);
-
-    let ground = room.getChildByName('ground');
-    
+    room.addChild(wall);    
     room.x = canvas.width/2;
     room.y = canvas.height/2;
 }
@@ -351,8 +353,7 @@ function onTick(e) {
 
     balls = balls.filter((ball) => {
         ball.move();
-        
-        if(!collision(room,ball,ball.damage)&&(!collisionEnemies(ball))){
+        if(!collision(room,ball,ball.damage)&&(!collisionArray(boxs,ball)&&(!collisionArray(enemies,ball)))){
             return ball;
         }
         ball.gotoAndStop('shoot');
@@ -374,35 +375,20 @@ function onTick(e) {
     stats.end();
 }
 
-function collisionEnemies(ball){
-    index = enemies.find((en)=> {
-        if(pixelCollision(ball,en,window.alphaThresh)){
-            en.takeDamage(ball.damage);
+function collisionArray(array, ref){
+    let index = array.find((el) => {
+        if(pixelCollision(el,ref,window.alphaThresh)){
+            if(ref.damage){
+                el.takeDamage(ref.damage);
+            }            
             return true;
         }
-    });
+    })
     return (index);
 }
 
-function collision(object, ref, damage){
-    let bool = pixelCollision(object.getChildByName('wall'),ref,window.alphaThresh);
-    let erase = boxs.find((index) => {
-        let box = object.getChildAt(index);
-        if(pixelCollision(box,ref,window.alphaThresh)){
-            bool = true;
-            if(damage != undefined){
-                box.takeDamage(damage);
-                if(box.life === 0){
-                    return true;
-                }
-            }
-        }
-    })
-    if(erase != undefined){
-        let index = boxs.indexOf(erase);
-        boxs.splice(index,1);
-    }
-    return bool;
+function collision(object, ref){
+    return pixelCollision(object.getChildByName('wall'),ref,window.alphaThresh);
 }
 
 function size(factor, ref, size){
