@@ -44,19 +44,23 @@ function initStats(){
     document.body.appendChild( stats.domElement );
 }
 
-function initPerso(){
-    var persoss = new createjs.SpriteSheet({
-        images:[af[COSMO]],
+function createPersoSS(images){
+    let ss = new createjs.SpriteSheet({
+        images:images,
         frames: {width:26, height:28, count:5, regX:13, regY:14}, 
         animations:{
-            head  : {frames: [0,1], speed: 0.15}, 
-            move  : {frames: [0,2], speed: 0.15},
-            damage: {frames: [3],   next : false},
-            dead  : {frames: [4],   next : false}
+            head:{frames:[0,1],speed:0.15}, 
+            move:{frames:[0,2],speed:0.15},
+            damage:{frames:[3],next:false},
+            dead:{frames:[4], next:false}
         }
     });
-  
-    var perso = new createjs.Sprite(persoss);
+    return ss;
+}
+
+function initPerso(){
+
+    var perso = new createjs.Sprite(createPersoSS([af[COSMO]]));
     perso.gotoAndPlay('head');
 
     scale = size(10, canvas.height, 28);
@@ -162,7 +166,8 @@ function initHero(){
         this.scaleX = stage.mouseX < this.x ? -this.scaleY : this.scaleY;
         this.children.forEach((child) => {
             child.move();
-        })
+        });
+        room.move();
     };
 
     cont.takeDamage = function(damage){
@@ -209,25 +214,15 @@ function initBall(x,y,scaleX,scaleY,rotation,dx,dy,speed=20,damage = 1){
         this.x += this.velX*this.speed;
         this.y += this.velY*this.speed;
     }
-    return ball;
+    return ball;    
 }
 
 function initGobelin(){
-    var gobelinss = new createjs.SpriteSheet({
-        images:[af[GOBELIN]],
-        frames: {width:26, height:28, count:5, regX:13, regY:14}, 
-        animations:{
-            head:{frames:[0,1],speed:0.15}, 
-            move:{frames:[0,2],speed:0.15},
-            damage:{frames:[3],next:false},
-            dead:{frames:[4], next:false}
-        }
-    });
 
-    var gobelin = new createjs.Sprite(gobelinss);
+    var gobelin = new createjs.Sprite(createPersoSS([af[GOBELIN]]));
     gobelin.gotoAndPlay('head');
-    gobelin.speed = 5;
     gobelin.lastShoot = 0;
+    gobelin.lastMove = 0;
 
     gobelin.takeDamage = function(life){
         if(life === 0){
@@ -289,12 +284,25 @@ function initEnemie(){
     cont.x = 4*scale*15;
     cont.y = 15*scale*15;
     cont.life = 5;
+    cont.speed = 3;
+    cont.testx=0;
+    cont.testy=0;
     cont.move = function(){
         let coef = Math.sign(hero.x-(room.x-(this.regX*this.scaleX)+this.x));
         this.children.forEach((child) => {
             child.scaleX = coef*child.scaleY;
             child.move();
-        })
+        });
+
+        // let dx = (Math.random()*2)-1;
+        // let dy = Math.sign(Math.random()-0.5)*Math.sqrt(1-Math.sqrt(Math.pow(dx,2)));
+        let x = this._matrix.tx;
+        //let y = this._matrix.ty;
+        let dx = hero.x-(room.x+x);
+        let dy = hero.y-(room.y-this.regY*scale+this.y);
+        let divise = Math.sqrt(Math.pow(dx,2)+Math.pow(dy,2));
+        this.x += dx/divise*this.speed;
+        this.y += dy/divise*this.speed;
     };
 
     cont.takeDamage = function(damage){
@@ -438,7 +446,6 @@ function imagesLoaded(e) {
 // update the stage every frame 
 function onTick(e) {
     stats.begin();
-    room.move();
 
     heroes.forEach((hero) =>{
         hero.move();
