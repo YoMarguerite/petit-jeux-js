@@ -1,4 +1,4 @@
-var canvas, stage, af, hero, enemies=[], balls=[], explodeBalls=[], boxs=[], room, stats, scale;
+var canvas, stage, af, hero, heroes=[], enemies=[], balls=[], eballs=[], explodeBalls=[], boxs=[], room, stats, scale;
 
 var COSMO = 'assets/cosmo.png',
     GUN = 'assets/revolver.png',
@@ -47,10 +47,13 @@ function initStats(){
 function initPerso(){
     var persoss = new createjs.SpriteSheet({
         images:[af[COSMO]],
-        frames: {width:26, height:28, count:3, regX:13, regY:14}, 
+        frames: {width:26, height:28, count:5, regX:13, regY:14}, 
         animations:{
-            head:{frames:[0,1],speed:0.15}, 
-            move:{frames:[0,2],speed:0.15}}
+            head  : {frames: [0,1], speed: 0.15}, 
+            move  : {frames: [0,2], speed: 0.15},
+            damage: {frames: [3],   next : false},
+            dead  : {frames: [4],   next : false}
+        }
     });
   
     var perso = new createjs.Sprite(persoss);
@@ -63,6 +66,9 @@ function initPerso(){
     perso.name = 'hero';
 
     perso.move = function(){
+        if(createjs.Ticker.getTime()>this.lastShoot+250 && this.currentAnimation==='damage'){
+            this.gotoAndPlay('head');
+        }
         if((upPress)||(downPress)||(leftPress)||(rightPress)){
             if(this.currentAnimation === 'head'){
                 this.gotoAndStop('head');
@@ -75,6 +81,16 @@ function initPerso(){
             }
         }
     };
+
+    perso.takeDamage = function(life){
+        if(life === 0){
+            this.gotoAndPlay('dead');
+        }else{
+            this.lastShoot = createjs.Ticker.getTime();
+            this.gotoAndPlay('damage');
+        }
+    };
+
     return perso;
 }
 
@@ -125,19 +141,22 @@ function initHero(){
                 }
                 
                 let coef = Math.sign(this.parent.scaleX);
-                initBall(this.parent.x-room._matrix.tx,this.parent.y-room._matrix.ty,
+                let ball = initBall(this.parent.x-room._matrix.tx,this.parent.y-room._matrix.ty,
                     coef*this.scaleX,this.scaleY, coef*this.rotation,
                     stage.mouseX-this.parent.x,stage.mouseY-this.parent.y,20);
+                balls.push(ball);
+                room.addChild(ball);
             }
         }
     };
-console.log("GUN 1")
-console.log(gun)
+
     var cont = new createjs.Container();
     cont.addChild(perso);
     cont.addChild(gun);
+
     cont.x = canvas.width/2;
     cont.y = canvas.height/2;
+    cont.life = 5;
     
     cont.move = function(){
         this.scaleX = stage.mouseX < this.x ? -this.scaleY : this.scaleY;
@@ -146,7 +165,19 @@ console.log(gun)
         })
     };
 
+    cont.takeDamage = function(damage){
+        this.life -= damage;
+        if(this.life <= 0){
+            this.life = 0;
+            let index = heroes.indexOf(this);
+            heroes.splice(index,1);
+            this.removeChild(this.children[1]);
+        }
+        this.children[0].takeDamage(this.life);
+    };
+
     stage.addChild(cont);
+    heroes.push(cont);
     hero = cont;
 }
 
@@ -161,6 +192,7 @@ function initBall(x,y,scaleX,scaleY,rotation,dx,dy,speed=20,damage = 1){
     });
     let ball = new createjs.Sprite(ballss);
 
+    
     ball.x = x;
     ball.y = y;
     ball.scaleX = scaleX;
@@ -177,9 +209,7 @@ function initBall(x,y,scaleX,scaleY,rotation,dx,dy,speed=20,damage = 1){
         this.x += this.velX*this.speed;
         this.y += this.velY*this.speed;
     }
-    balls.push(ball);
-    room.addChild(ball);
-    console.log(ball);
+    return ball;
 }
 
 function initGobelin(){
@@ -197,15 +227,10 @@ function initGobelin(){
     var gobelin = new createjs.Sprite(gobelinss);
     gobelin.gotoAndPlay('head');
     gobelin.speed = 5;
-    gobelin.life = 5;
     gobelin.lastShoot = 0;
 
-    gobelin.takeDamage = function(damage){
-        this.life -= damage;
-        if(this.life <= 0){
-            this.life = 0;
-            let index = enemies.indexOf(this);
-            enemies.splice(index,1);
+    gobelin.takeDamage = function(life){
+        if(life === 0){
             this.gotoAndPlay('dead');
         }else{
             this.lastShoot = createjs.Ticker.getTime();
@@ -219,7 +244,6 @@ function initGobelin(){
         }
     };
     
-    enemies.push(gobelin);
     return gobelin;
 }
 
@@ -228,6 +252,8 @@ function initEnemie(){
     let gobelin = initGobelin();
     let gun = initGun(gobelin);
     gun.y = 4;
+    gun.lastShoot = createjs.Ticker.getTime();
+    gun.nextShoot = gun.lastShoot+((Math.random()*5)+5)*1000;
     gun.move = function(){
         let x = hero.x-(room.x-(this.parent.regX*this.parent.scaleX)+this.parent.x);
         let y = hero.y-(room.y-(this.parent.regY*this.parent.scaleY)+this.parent.y);
@@ -240,28 +266,29 @@ function initEnemie(){
                 this.gotoAndPlay('gun');
             }
         }
-        if(boolDown){
-            if(tick>(this.lastShoot+750)){
-                this.lastShoot = tick;
-                if(this.currentAnimation === 'gun'){
-                    this.gotoAndStop('gun');
-                    this.gotoAndPlay('shoot');
-                }
-                let coef = Math.sign(this.parent.scaleX);
-                initBall(this.parent.x,this.parent.y,
-                    coef*this.scaleX,this.scaleY, coef*this.rotation,
-                    x,y);
+        if(tick>this.nextShoot){
+            this.lastShoot = tick;
+            this.nextShoot = tick+((Math.random()*2)+3)*1000;
+            if(this.currentAnimation === 'gun'){
+                this.gotoAndStop('gun');
+                this.gotoAndPlay('shoot');
             }
+            let coef = Math.sign(this.parent.scaleX);
+            let ball = initBall((this.parent.x-this.parent.regX*scale),(this.parent.y-this.parent.regY*scale),
+                this.scaleX*this.parent.scaleX,this.scaleY*this.parent.scaleY, coef*this.rotation,
+                x,y,10);
+            eballs.push(ball);
+            room.addChild(ball);
         }
     };
-    console.log("GUN 2")
-    console.log(gun)
+
     let cont = new createjs.Container();
     cont.addChild(gobelin);
     cont.addChild(gun);
+
     cont.x = 4*scale*15;
     cont.y = 15*scale*15;
-    cont.name='gobelinContainer';
+    cont.life = 5;
     cont.move = function(){
         let coef = Math.sign(hero.x-(room.x-(this.regX*this.scaleX)+this.x));
         this.children.forEach((child) => {
@@ -270,9 +297,19 @@ function initEnemie(){
         })
     };
 
-    console.log(cont);
+    cont.takeDamage = function(damage){
+        this.life -= damage;
+        if(this.life <= 0){
+            this.life = 0;
+            let index = enemies.indexOf(this);
+            enemies.splice(index,1);
+            this.removeChild(this.children[1]);
+        }
+        this.children[0].takeDamage(this.life);
+    };
+
     room.addChild(cont);
-    enemies.push(gobelin);
+    enemies.push(cont);
 }
 
 function initRoom(){
@@ -297,10 +334,11 @@ function initRoom(){
         }
         let clone = this.clone(true);
         clone.x += x;
+        let wall = clone.getChildByName('wall');
         let array = clone.children.filter((child) => {
             return (child.name === 'box')&&(child.currentAnimation!='one');
         });
-        if(!collision(clone,ref)&&(!collisionArray(array,ref))){
+        if(!collision(wall,ref)&&(!collisionSprite(array,ref))){
             this.x += x;
         }
         clone.x -= x;
@@ -308,11 +346,10 @@ function initRoom(){
         array = clone.children.filter((child) => {
             return (child.name === 'box')&&(child.currentAnimation!='one');
         });
-        if(!collision(clone,ref)&&(!collisionArray(array,ref))){
+        if(!collision(wall,ref)&&(!collisionSprite(array,ref))){
             this.y += y;
         }
 
-        this.getChildByName('gobelinContainer').move();
     };
 
     stage.addChild(room);
@@ -401,21 +438,32 @@ function imagesLoaded(e) {
 // update the stage every frame 
 function onTick(e) {
     stats.begin();
-    hero.move();
     room.move();
+
+    heroes.forEach((hero) =>{
+        hero.move();
+    });
 
     enemies.forEach((en) =>{
         en.move();
     })
 
-    balls = balls.filter((ball) => {
+    let wall = room.getChildByName('wall');
+
+    eballs = eballs.filter((ball) => {
         ball.move();
-        if(!collision(room,ball,ball.damage)&&(!collisionArray(boxs,ball)&&(!collisionArray(enemies,ball)))){
+        if(!collision(wall,ball,ball.damage)&&(!collisionSprite(boxs,ball))&&(!collisionContainer(heroes,ball))){
             return ball;
         }
-        ball.gotoAndStop('shoot');
-        ball.gotoAndPlay('explode');
-        explodeBalls.push(ball);
+        ballFinish(ball);
+    });
+
+    balls = balls.filter((ball) => {
+        ball.move();
+        if(!collision(wall,ball,ball.damage)&&(!collisionSprite(boxs,ball)&&(!collisionContainer(enemies,ball)))){
+            return ball;
+        }
+        ballFinish(ball);
     });
 
     explodeBalls = explodeBalls.filter((ball) => {
@@ -432,8 +480,14 @@ function onTick(e) {
     stats.end();
 }
 
-function collisionArray(array, ref){
-    //console.log(array);
+function ballFinish(ball){
+    ball.gotoAndStop('shoot');
+    ball.gotoAndPlay('explode');
+    explodeBalls.push(ball);
+}
+
+
+function collisionSprite(array, ref){
     let index = array.find((el) => {
         if(pixelCollision(el,ref,window.alphaThresh)){
             if(ref.damage){
@@ -445,8 +499,21 @@ function collisionArray(array, ref){
     return (index);
 }
 
+function collisionContainer(array, ref){
+    let index = array.find((el) => {
+        let sprite = el.children[0];
+        if(pixelCollision(sprite,ref,window.alphaThresh)){
+            if(ref.damage){
+                el.takeDamage(ref.damage);
+            }            
+            return true;
+        }
+    })
+    return (index);
+}
+
 function collision(object, ref){
-    return pixelCollision(object.getChildByName('wall'),ref,window.alphaThresh);
+    return pixelCollision(object,ref,window.alphaThresh);
 }
 
 function rotation(x, y){
