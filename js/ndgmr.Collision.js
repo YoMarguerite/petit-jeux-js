@@ -79,7 +79,7 @@ this.ndgmr = this.ndgmr || {};
 
     alphaThreshold = alphaThreshold || 0;
     alphaThreshold = Math.min(0.99999,alphaThreshold);
-
+    
     //setting the canvas size
     collisionCanvas.width  = intersection.width;
     collisionCanvas.height = intersection.height; 

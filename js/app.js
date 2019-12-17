@@ -4,6 +4,7 @@ var COSMO = 'assets/cosmo.png',
     GUN = 'assets/revolver.png',
     FIRE = 'assets/fire.png',
     GOBELIN = 'assets/gobelin.png',
+    BLOCK = 'assets/block.png',
     WALL = 'assets/wall3.png',
     GROUND = 'assets/ground.png',
     BOX = 'assets/box.png';
@@ -12,7 +13,7 @@ var COSMO = 'assets/cosmo.png',
 pixelCollision = ndgmr.checkPixelCollision;
 rectCollision = ndgmr.checkRectCollision;
 
-window.alphaThresh = 0.75;
+window.alphaThresh = 0.9;
 
 function init() {
     // creating the canvas-element 
@@ -155,6 +156,7 @@ function initHero(){
     };
 
     var cont = new createjs.Container();
+    //cont.addChild(new createjs.Bitmap(af[BLOCK]));
     cont.addChild(perso);
     cont.addChild(gun);
 
@@ -214,6 +216,7 @@ function initBall(x,y,scaleX,scaleY,rotation,dx,dy,speed=20,damage = 1){
         this.x += this.velX*this.speed;
         this.y += this.velY*this.speed;
     }
+    //createjs.Ticker.removeAllEventListeners();
     return ball;    
 }
 
@@ -285,8 +288,8 @@ function initEnemie(){
     cont.y = 15*scale*15;
     cont.life = 5;
     cont.speed = 3;
-    cont.testx=0;
-    cont.testy=0;
+    cont.lastMove = (Math.random()*3+1)*1000;
+    cont.lapsMove = (Math.random()*3+1)*1000;
     cont.move = function(){
         let coef = Math.sign(hero.x-(room.x-(this.regX*this.scaleX)+this.x));
         this.children.forEach((child) => {
@@ -294,15 +297,42 @@ function initEnemie(){
             child.move();
         });
 
-        // let dx = (Math.random()*2)-1;
-        // let dy = Math.sign(Math.random()-0.5)*Math.sqrt(1-Math.sqrt(Math.pow(dx,2)));
-        let x = this._matrix.tx;
-        //let y = this._matrix.ty;
-        let dx = hero.x-(room.x+x);
-        let dy = hero.y-(room.y-this.regY*scale+this.y);
-        let divise = Math.sqrt(Math.pow(dx,2)+Math.pow(dy,2));
-        this.x += dx/divise*this.speed;
-        this.y += dy/divise*this.speed;
+
+        let time = createjs.Ticker.getTime();
+        let sprite = this.children[0];
+        if(time>this.lastMove&&time<this.lastMove+this.lapsMove){  
+
+            let wall = room.getChildByName('wall');
+
+            if(sprite.currentAnimation!='move'){
+                sprite.gotoAndPlay('move');
+            }          
+            
+            let dx = hero.x-(room.x-this.regX*scale+this.x);
+            let dy = hero.y-(room.y-this.regY*scale+this.y);
+
+            let divise = Math.sqrt(Math.pow(dx,2)+Math.pow(dy,2));
+            
+            let x = dx/divise*this.speed;
+            let y = dy/divise*this.speed;
+
+            this.x+=x;            
+            if(collisionSprite(boxs,sprite)||collision(wall,sprite)){
+                this.x-=x;
+            }
+            
+            this.y+=y;            
+            if(collisionSprite(boxs,sprite)||collision(wall,sprite)){
+                this.y-=y;
+            }
+        }
+        if(time>this.lastMove+this.lapsMove){
+            if(sprite.currentAnimation!='head'){
+                sprite.gotoAndPlay('head');
+            } 
+            this.lastMove = time+(Math.random()*3+1)*1000;
+            this.lapsMove = (Math.random()*3+1)*1000;
+        }
     };
 
     cont.takeDamage = function(damage){
@@ -445,46 +475,55 @@ function imagesLoaded(e) {
 
 // update the stage every frame 
 function onTick(e) {
-    stats.begin();
+    if(!e.paused){
+        stats.begin();
 
-    heroes.forEach((hero) =>{
-        hero.move();
-    });
+        heroes.forEach((hero) =>{
+            hero.move();
+        });
 
-    enemies.forEach((en) =>{
-        en.move();
-    })
+        enemies.forEach((en) =>{
+            en.move();
+        })
 
-    let wall = room.getChildByName('wall');
+        let wall = room.getChildByName('wall');
 
-    eballs = eballs.filter((ball) => {
-        ball.move();
-        if(!collision(wall,ball,ball.damage)&&(!collisionSprite(boxs,ball))&&(!collisionContainer(heroes,ball))){
-            return ball;
-        }
-        ballFinish(ball);
-    });
+        eballs = eballs.filter((ball) => {
+            ball.move();
+            if(!collision(wall,ball,ball.damage)&&(!collisionSprite(boxs,ball))&&(!collisionContainer(heroes,ball))){
+                return ball;
+            }
+            ballFinish(ball);
+        });
 
-    balls = balls.filter((ball) => {
-        ball.move();
-        if(!collision(wall,ball,ball.damage)&&(!collisionSprite(boxs,ball)&&(!collisionContainer(enemies,ball)))){
-            return ball;
-        }
-        ballFinish(ball);
-    });
+        balls = balls.filter((ball) => {
+            ball.move();
+            if(!collision(wall,ball,ball.damage)&&(!collisionSprite(boxs,ball)&&(!collisionContainer(enemies,ball)))){
+                return ball;
+            }
+            ballFinish(ball);
+        });
 
-    explodeBalls = explodeBalls.filter((ball) => {
-        if(ball.currentAnimationFrame > 4){
-            stage.removeChild(ball);
-            room.removeChild(ball)
-        }else{
-            return ball;
-        }
-    });
-   
-    stage.update();
-  
-    stats.end();
+        // enemies.forEach((en)=>{
+        //     if(collisionSprite(boxs,en.children[0])){
+        //         console.log('ok')
+        //     }
+        // })
+
+        explodeBalls = explodeBalls.filter((ball) => {
+            if(ball.currentAnimationFrame > 4){
+                stage.removeChild(ball);
+                room.removeChild(ball)
+            }else{
+                return ball;
+            }
+        });
+    
+        stage.update();
+    
+        stats.end();
+    }
+    
 }
 
 function ballFinish(ball){
