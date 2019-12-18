@@ -34,7 +34,7 @@ function init() {
     af.onComplete = function() {
         imagesLoaded();
     }
-    af.loadAssets([COSMO,GUN,FIRE,GOBELIN,WALL,GROUND,BOX]);
+    af.loadAssets([COSMO,GUN,FIRE,GOBELIN,WALL,GROUND,BOX,BLOCK]);
 }
 
 function initStats(){
@@ -349,11 +349,16 @@ function initRoom(){
 
     let ground = new createjs.Bitmap(af[GROUND]);
     ground.name='ground';
-
+    let wall = new createjs.Bitmap(af[WALL]);
+    wall.name='wall';
+      
     room = new createjs.Container();
 
     room.addChild(ground);
+    room.addChild(wall);  
     
+    room.x = canvas.width/2;
+    room.y = canvas.height/2;
     room.velX = 5;
     room.velY = 5;
     room.move = function() {
@@ -388,10 +393,18 @@ function initRoom(){
     stage.addChild(room);
 }
 
+function initBlock(x,y){
+    let block = new createjs.Bitmap(af[BLOCK]);
+    block.x = x;
+    block.y = y;
+    room.addChild(block);
+    boxs.push(block);
+}
+
 function initBox(x,y){
     let boxss = new createjs.SpriteSheet({
         images:[af[BOX]],
-        frames: {width:15,height:15,count:4,regX:7.5,regY:7.5},
+        frames: {width:15,height:15,count:4},
         animations:{
             four:0,
             three:1,
@@ -419,13 +432,6 @@ function initBox(x,y){
     boxs.push(box);
 }
 
-function initWall(){
-    let wall = new createjs.Bitmap(af[WALL]);
-    wall.name='wall';
-    room.addChild(wall);    
-    room.x = canvas.width/2;
-    room.y = canvas.height/2;
-}
 
 // creating a Bitmap with that image 
 // and adding the Bitmap to the stage 
@@ -433,20 +439,23 @@ function imagesLoaded(e) {
     initRoom();
     initStats();
     initHero();
-    initWall();
     initEnemie();
 
-    initBox(4.5*scale*15,6.5*scale*15);
-    initBox(5.5*scale*15,6.5*scale*15);
+    initBlock(4*scale*15,5*scale*15);
 
-    initBox(4.5*scale*15,7.5*scale*15);
-    initBox(5.5*scale*15,7.5*scale*15);
+    initBox(4*scale*15,6*scale*15);
+    initBox(5*scale*15,6*scale*15);
 
-    initBox(12.5*scale*15,4.5*scale*15);
-    initBox(13.5*scale*15,4.5*scale*15);
+    initBox(4*scale*15,7*scale*15);
+    initBox(5*scale*15,7*scale*15);
 
-    initBox(12.5*scale*15,3.5*scale*15);
-    initBox(13.5*scale*15,3.5*scale*15);
+    initBlock(12*scale*15,5*scale*15);
+
+    initBox(12*scale*15,4*scale*15);
+    initBox(13*scale*15,4*scale*15);
+
+    initBox(12*scale*15,3*scale*15);
+    initBox(13*scale*15,3*scale*15);
 
     let ground = room.getChildByName('ground');
     room.children.forEach((child) => {
@@ -518,7 +527,7 @@ function ballFinish(ball){
 function collisionSprite(array, ref){
     let index = array.find((el) => {
         if(rectCollision(el,ref)){
-            if(ref.damage){
+            if(ref.damage&&el.takeDamage){
                 el.takeDamage(ref.damage);
             }            
             return true;
