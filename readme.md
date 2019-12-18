@@ -1,9 +1,7 @@
-Animation statique (prototype) : 2 images
-Animation déplacement (prototype) : 2 images
-Placement du canvas par rapport à l'écran
-Bouton pause : 2 image
-Ecran de pause : 1 image
-Bouton reprendre : 1 image
-Mouvement du décor
-Mur : 1 image
-Sol : 1 image
+Dessiner de nouvelles salles
+ajouter des couloirs (prévision pour la suite) => puis une salle de début
+ajouter un nouvel ennemi (peut-être sans arme ou sur un schéma ddifférent des gobelins)
+afficher les points de vie (trouver un moyen générique de le faire)
+passer le jeu en version mobile (attention au resize des éléments)
+ajouter un menu pause
+ajouter des options modifiables (elles doivent être conservées)
