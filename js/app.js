@@ -109,9 +109,10 @@ function initGun(perso){
 
     var gun = new createjs.Sprite(gunss);
     gun.gotoAndPlay('gun');
-    let gunsize = size(25, perso.spriteSheet._frameWidth*perso.scaleY, 15);
+    let gunsize = size(25, perso.spriteSheet._frameHeight*perso.scaleY, 15);
     gun.scaleX = gunsize;
     gun.scaleY = gunsize;
+    console.log(gun)
     gun.lastShoot = 0;
     gun.name ='gun';
     
@@ -346,12 +347,21 @@ function initEnemie(){
 
 function initRoom(){
 
+    let ground = new createjs.Bitmap(af[GROUND]);
+    ground.name='ground';
+
     room = new createjs.Container();
+
+    room.addChild(ground);
     
     room.velX = 5;
     room.velY = 5;
     room.move = function() {
-        let ref = hero.getChildByName('hero'),x=0,y=0;
+
+        let ref = hero.getChildByName('hero'),
+            wall = this.getChildByName('wall'),
+            x=0,y=0;
+
         if(upPress){
             y+=this.velY;
         }
@@ -364,33 +374,18 @@ function initRoom(){
         if(rightPress){
             x-=this.velX;
         }
-        let clone = this.clone(true);
-        clone.x += x;
-        let wall = clone.getChildByName('wall');
-        let array = clone.children.filter((child) => {
-            return (child.name === 'box')&&(child.currentAnimation!='one');
-        });
-        if(!collision(wall,ref)&&(!collisionSprite(array,ref))){
-            this.x += x;
+        
+        this.x += x;
+        if(collision(wall,ref)||(collisionSprite(boxs,ref))){
+            this.x -= x;
         }
-        clone.x -= x;
-        clone.y += y;
-        array = clone.children.filter((child) => {
-            return (child.name === 'box')&&(child.currentAnimation!='one');
-        });
-        if(!collision(wall,ref)&&(!collisionSprite(array,ref))){
-            this.y += y;
+        this.y += y;
+        if(collision(wall,ref)||(collisionSprite(boxs,ref))){
+            this.y -= y;
         }
-
     };
 
     stage.addChild(room);
-}
-
-function initGround(){
-    let ground = new createjs.Bitmap(af[GROUND]);
-    ground.name='ground';
-    room.addChild(ground);
 }
 
 function initBox(x,y){
@@ -436,7 +431,6 @@ function initWall(){
 // and adding the Bitmap to the stage 
 function imagesLoaded(e) {
     initRoom();
-    initGround();
     initStats();
     initHero();
     initWall();
