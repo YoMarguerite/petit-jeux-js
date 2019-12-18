@@ -278,8 +278,8 @@ function initEnemie(){
     cont.addChild(gobelin);
     cont.addChild(gun);
 
-    cont.x = 4*scale*15;
-    cont.y = 15*scale*15;
+    cont.x = ((Math.random()*15)+1)*scale*15;
+    cont.y = ((Math.random()*21)+1)*scale*15;
     cont.velX = 0;
     cont.velY = 0;
     cont.life = 5;
@@ -335,6 +335,7 @@ function initEnemie(){
             let index = enemies.indexOf(this);
             enemies.splice(index,1);
             this.removeChild(this.children[1]);
+            room.setChildIndex(this,14);
         }
         this.children[0].takeDamage(this.life);
     };
@@ -459,6 +460,8 @@ function imagesLoaded(e) {
 
     initBlock(12*scale*15,16*scale*15);
 
+    initEnemie();
+    initEnemie();
     initEnemie();
 
     let ground = room.getChildByName('ground');
