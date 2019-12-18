@@ -13,7 +13,7 @@ var COSMO = 'assets/cosmo.png',
 pixelCollision = ndgmr.checkPixelCollision;
 rectCollision = ndgmr.checkRectCollision;
 
-window.alphaThresh = 0.9;
+window.alphaThresh = 0.999;
 
 function init() {
     // creating the canvas-element 
@@ -45,10 +45,10 @@ function initStats(){
     document.body.appendChild( stats.domElement );
 }
 
-function createPersoSS(images){
+function createPersoSS(images,x,y){
     let ss = new createjs.SpriteSheet({
         images:images,
-        frames: {width:26, height:28, count:5, regX:13, regY:14}, 
+        frames: {width:x, height:y, count:5, regX:x/2, regY:y/2}, 
         animations:{
             head:{frames:[0,1],speed:0.15}, 
             move:{frames:[0,2],speed:0.15},
@@ -61,7 +61,7 @@ function createPersoSS(images){
 
 function initPerso(){
 
-    var perso = new createjs.Sprite(createPersoSS([af[COSMO]]));
+    var perso = new createjs.Sprite(createPersoSS([af[COSMO]],24,26));
     perso.gotoAndPlay('head');
 
     scale = size(10, canvas.height, 28);
@@ -76,12 +76,10 @@ function initPerso(){
         }
         if((upPress)||(downPress)||(leftPress)||(rightPress)){
             if(this.currentAnimation === 'head'){
-                this.gotoAndStop('head');
                 this.gotoAndPlay('move');
             }
         }else{
             if(this.currentAnimation === 'move'){
-                this.gotoAndStop('move');
                 this.gotoAndPlay('head');
             }
         }
@@ -133,7 +131,6 @@ function initHero(){
         let tick = createjs.Ticker.getTime();
         if(tick>(this.lastShoot+250)){
             if(this.currentAnimation === 'shoot'){
-                this.gotoAndStop('shoot');
                 this.gotoAndPlay('gun');
             }
         }
@@ -141,7 +138,6 @@ function initHero(){
             if(tick>(this.lastShoot+750)){
                 this.lastShoot = tick;
                 if(this.currentAnimation === 'gun'){
-                    this.gotoAndStop('gun');
                     this.gotoAndPlay('shoot');
                 }
                 
@@ -222,7 +218,7 @@ function initBall(x,y,scaleX,scaleY,rotation,dx,dy,speed=20,damage = 1){
 
 function initGobelin(){
 
-    var gobelin = new createjs.Sprite(createPersoSS([af[GOBELIN]]));
+    var gobelin = new createjs.Sprite(createPersoSS([af[GOBELIN]],18,26));
     gobelin.gotoAndPlay('head');
     gobelin.lastShoot = 0;
     gobelin.lastMove = 0;
@@ -260,7 +256,6 @@ function initEnemie(){
         let tick = createjs.Ticker.getTime();
         if(tick>(this.lastShoot+250)){
             if(this.currentAnimation === 'shoot'){
-                this.gotoAndStop('shoot');
                 this.gotoAndPlay('gun');
             }
         }
@@ -268,7 +263,6 @@ function initEnemie(){
             this.lastShoot = tick;
             this.nextShoot = tick+((Math.random()*2)+3)*1000;
             if(this.currentAnimation === 'gun'){
-                this.gotoAndStop('gun');
                 this.gotoAndPlay('shoot');
             }
             let coef = Math.sign(this.parent.scaleX);
@@ -504,12 +498,6 @@ function onTick(e) {
             ballFinish(ball);
         });
 
-        // enemies.forEach((en)=>{
-        //     if(collisionSprite(boxs,en.children[0])){
-        //         console.log('ok')
-        //     }
-        // })
-
         explodeBalls = explodeBalls.filter((ball) => {
             if(ball.currentAnimationFrame > 4){
                 stage.removeChild(ball);
@@ -535,7 +523,7 @@ function ballFinish(ball){
 
 function collisionSprite(array, ref){
     let index = array.find((el) => {
-        if(pixelCollision(el,ref,window.alphaThresh)){
+        if(rectCollision(el,ref)){
             if(ref.damage){
                 el.takeDamage(ref.damage);
             }            

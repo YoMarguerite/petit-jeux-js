@@ -2,7 +2,9 @@ var boolDown, upPress, downPress, leftPress, rightPress;
 boolDown = upPress = downPress = leftPress = rightPress = false;
 
 function onMouseDown(e) {
-  boolDown = true;
+  if(e.button === 0){
+    boolDown = true;
+  }
 }
 
 function onMouseUp(e) {
