@@ -132,8 +132,7 @@ this.ndgmr = this.ndgmr || {};
       image = bitmap.image;
     } else if ( bitmap instanceof createjs.Sprite ) {
     //--------------ATTENTION LIGNE MODIFIEE !!!!!!
-    //frame = bitmap.spriteSheet.getFrame( bitmap.currentFrame )
-    frame = bitmap.spriteSheet.getFrame( 0 )
+    frame = bitmap.spriteSheet.getFrame( bitmap.frameRef!=undefined?bitmap.frameRef:bitmap.currentFrame )
       frameName = frame.image.src + ':' + 
                   frame.rect.x + ':' + frame.rect.y + ':' + 
                   frame.rect.width  + ':' + frame.rect.height;// + ':' + frame.rect.regX  + ':' + frame.rect.regY 

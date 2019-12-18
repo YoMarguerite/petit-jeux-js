@@ -63,6 +63,7 @@ function initPerso(){
 
     var perso = new createjs.Sprite(createPersoSS([af[COSMO]],24,26));
     perso.gotoAndPlay('head');
+    perso.frameRef = 0;
 
     scale = size(10, canvas.height, 28);
     perso.scaleX = scale;
@@ -121,7 +122,6 @@ function initGun(perso){
 function initHero(){
     
     var perso = initPerso();
-    console.log(perso);
     var gun = initGun(perso);
     gun.y = 10;
     gun.move = function(){
@@ -221,6 +221,7 @@ function initGobelin(){
 
     var gobelin = new createjs.Sprite(createPersoSS([af[GOBELIN]],18,26));
     gobelin.gotoAndPlay('move');
+    gobelin.frameRef = 0;
     gobelin.lastShoot = 0;
     gobelin.lastMove = 0;
 
@@ -278,9 +279,7 @@ function initEnemie(){
     let cont = new createjs.Container();
     cont.addChild(gobelin);
     cont.addChild(gun);
-
-    cont.x = ((Math.random()*15)+1)*scale*15;
-    cont.y = ((Math.random()*21)+1)*scale*15;
+   
     cont.velX = 0;
     cont.velY = 0;
     cont.life = 5;
@@ -301,7 +300,7 @@ function initEnemie(){
 
             let wall = room.getChildByName('wall');
 
-            if(sprite.currentAnimation!='move'){
+            if(sprite.currentAnimation==='head'){
                 sprite.gotoAndPlay('move');
             }    
 
@@ -472,6 +471,16 @@ function imagesLoaded(e) {
         child.regX = (ground.image.width/2);
         child.regY = (ground.image.height/2);
     });
+
+    let wall = room.getChildByName('wall');
+    enemies.forEach((en)=>{
+        let sprite = en.children[0];
+        do{
+            en.x = ((Math.random()*15)+1)*scale*15;
+            en.y = ((Math.random()*21)+1)*scale*15;
+        }while(collision(wall,sprite)||collisionSprite(boxs,sprite));
+    });
+    
 
     // set the Ticker to 30fps 
     createjs.Ticker.setFPS(40); 
