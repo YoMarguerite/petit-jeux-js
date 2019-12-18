@@ -121,6 +121,7 @@ function initGun(perso){
 function initHero(){
     
     var perso = initPerso();
+    console.log(perso);
     var gun = initGun(perso);
     gun.y = 10;
     gun.move = function(){
@@ -473,7 +474,7 @@ function imagesLoaded(e) {
     });
 
     // set the Ticker to 30fps 
-    createjs.Ticker.setFPS(30); 
+    createjs.Ticker.setFPS(40); 
     createjs.Ticker.addEventListener('tick', this.onTick.bind(this));
 }
 
