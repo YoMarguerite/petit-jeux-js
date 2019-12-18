@@ -112,7 +112,6 @@ function initGun(perso){
     let gunsize = size(25, perso.spriteSheet._frameHeight*perso.scaleY, 15);
     gun.scaleX = gunsize;
     gun.scaleY = gunsize;
-    console.log(gun)
     gun.lastShoot = 0;
     gun.name ='gun';
     
@@ -220,7 +219,7 @@ function initBall(x,y,scaleX,scaleY,rotation,dx,dy,speed=20,damage = 1){
 function initGobelin(){
 
     var gobelin = new createjs.Sprite(createPersoSS([af[GOBELIN]],18,26));
-    gobelin.gotoAndPlay('head');
+    gobelin.gotoAndPlay('move');
     gobelin.lastShoot = 0;
     gobelin.lastMove = 0;
 
@@ -281,10 +280,12 @@ function initEnemie(){
 
     cont.x = 4*scale*15;
     cont.y = 15*scale*15;
+    cont.velX = 0;
+    cont.velY = 0;
     cont.life = 5;
     cont.speed = 3;
-    cont.lastMove = (Math.random()*3+1)*1000;
-    cont.lapsMove = (Math.random()*3+1)*1000;
+    cont.lastMove = 0;
+    cont.lapsMove = 0;
     cont.move = function(){
         let coef = Math.sign(hero.x-(room.x-(this.regX*this.scaleX)+this.x));
         this.children.forEach((child) => {
@@ -301,32 +302,29 @@ function initEnemie(){
 
             if(sprite.currentAnimation!='move'){
                 sprite.gotoAndPlay('move');
-            }          
-            
-            let dx = hero.x-(room.x-this.regX*scale+this.x);
-            let dy = hero.y-(room.y-this.regY*scale+this.y);
+            }    
 
-            let divise = Math.sqrt(Math.pow(dx,2)+Math.pow(dy,2));
-            
-            let x = dx/divise*this.speed;
-            let y = dy/divise*this.speed;
-
-            this.x+=x;            
+            this.x+=this.velX;            
             if(collisionSprite(boxs,sprite)||collision(wall,sprite)){
-                this.x-=x;
+                this.x-=this.velX;
             }
             
-            this.y+=y;            
+            this.y+=this.velY;            
             if(collisionSprite(boxs,sprite)||collision(wall,sprite)){
-                this.y-=y;
+                this.y-=this.velY;
             }
         }
         if(time>this.lastMove+this.lapsMove){
             if(sprite.currentAnimation!='head'){
                 sprite.gotoAndPlay('head');
+                this.lastMove = time+(Math.random()*3+1)*1000;
+                this.lapsMove = (Math.random()*3+1)*1000;
+                let dx = Math.floor(hero.x-(room.x-this.regX*scale+this.x));
+                let dy = Math.floor(hero.y-(room.y-this.regY*scale+this.y));
+                let divise = Math.sqrt(Math.pow(dx,2)+Math.pow(dy,2));
+                this.velX = dx/divise*this.speed;
+                this.velY = dy/divise*this.speed;
             } 
-            this.lastMove = time+(Math.random()*3+1)*1000;
-            this.lapsMove = (Math.random()*3+1)*1000;
         }
     };
 
@@ -439,7 +437,7 @@ function imagesLoaded(e) {
     initRoom();
     initStats();
     initHero();
-    initEnemie();
+    
 
     initBlock(4*scale*15,5*scale*15);
 
@@ -456,6 +454,12 @@ function imagesLoaded(e) {
 
     initBox(12*scale*15,3*scale*15);
     initBox(13*scale*15,3*scale*15);
+
+    initBlock(4*scale*15,16*scale*15);
+
+    initBlock(12*scale*15,16*scale*15);
+
+    initEnemie();
 
     let ground = room.getChildByName('ground');
     room.children.forEach((child) => {
