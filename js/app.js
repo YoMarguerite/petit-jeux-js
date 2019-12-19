@@ -431,6 +431,20 @@ function initBox(x,y){
     boxs.push(box);
 }
 
+function initDoor(){
+    let x=60, y=25;
+    let ss = new createjs.SpriteSheet({
+        images:[af[DOOR]],
+        frames: {width:x, height:y, count:4, regX:x/2, regY:y/2}, 
+        animations:{
+            close:{frames:[0],next:false}, 
+            open:{frames:[1,2,3],speed:0.15, next:false}
+        }
+    });
+
+    let door = new createjs.Sprite(ss);
+}
+
 
 // creating a Bitmap with that image 
 // and adding the Bitmap to the stage 
