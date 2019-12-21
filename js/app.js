@@ -1,4 +1,4 @@
-var canvas, stage,text, af, hero, heroes=[], enemies=[], balls=[], eballs=[], explodeBalls=[], boxs=[], room, stats, scale;
+var canvas, stage, af, hero,life, heroes=[], enemies=[], balls=[], eballs=[], explodeBalls=[], boxs=[], room, stats, scale;
 
 var COSMO = 'assets/cosmo.png',
     GUN = 'assets/revolver.png',
@@ -178,7 +178,11 @@ function initHero(){
             this.removeChild(this.children[1]);
         }
         this.children[0].takeDamage(this.life);
-        text.text = this.life+'/5';
+
+        life.children[2].text = this.life+'/5';
+        let rect = new createjs.Shape();
+        rect.graphics.beginFill("red").drawRoundRect(0, 0, 200*(this.life/5), 30,20);
+        life.children[1] = rect;
     };
 
     stage.addChild(cont);
@@ -447,20 +451,24 @@ function initDoor(){
 }
 
 function initText(){
+    
     let rect = new createjs.Shape();
-    rect.graphics.beginFill("red").beginStroke("black").setStrokeStyle(2).drawRoundRect(0, 0, 200, 30,20);
+    rect.graphics.beginFill("grey").beginStroke("black").setStrokeStyle(2).drawRoundRect(0, 0, 200, 30,20);
+    let rect2 = new createjs.Shape();
+    rect2.graphics.beginFill("red").drawRoundRect(0, 0, 200, 30,20);
 
-    text = new createjs.Text('5/5','32px Arial','black');
+    let text = new createjs.Text('5/5','20px game','black');
     let b = text.getBounds();
     text.x = 100-(b.width/2);
-    text.y = 17-(b.height/2);
+    text.y = 15-(b.height/2);
     
     let cont = new createjs.Container();
-    
     cont.addChild(rect);
+    cont.addChild(rect2);
     cont.addChild(text);
     
     stage.addChild(cont);
+    return cont
 }
 
 
@@ -513,7 +521,7 @@ function imagesLoaded(e) {
         }while(collision(wall,sprite)||collisionSprite(boxs,sprite));
     });
 
-    initText();
+    life = initText();
     
 
     // set the Ticker to 30fps 
