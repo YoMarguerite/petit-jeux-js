@@ -1,4 +1,4 @@
-var canvas, stage, af, hero, heroes=[], enemies=[], balls=[], eballs=[], explodeBalls=[], boxs=[], room, stats, scale;
+var canvas, stage,text, af, hero, heroes=[], enemies=[], balls=[], eballs=[], explodeBalls=[], boxs=[], room, stats, scale;
 
 var COSMO = 'assets/cosmo.png',
     GUN = 'assets/revolver.png',
@@ -178,6 +178,7 @@ function initHero(){
             this.removeChild(this.children[1]);
         }
         this.children[0].takeDamage(this.life);
+        text.text = this.life+'/5';
     };
 
     stage.addChild(cont);
@@ -445,6 +446,23 @@ function initDoor(){
     let door = new createjs.Sprite(ss);
 }
 
+function initText(){
+    let rect = new createjs.Shape();
+    rect.graphics.beginFill("red").beginStroke("black").setStrokeStyle(2).drawRoundRect(0, 0, 200, 30,20);
+
+    text = new createjs.Text('5/5','32px Arial','black');
+    let b = text.getBounds();
+    text.x = 100-(b.width/2);
+    text.y = 17-(b.height/2);
+    
+    let cont = new createjs.Container();
+    
+    cont.addChild(rect);
+    cont.addChild(text);
+    
+    stage.addChild(cont);
+}
+
 
 // creating a Bitmap with that image 
 // and adding the Bitmap to the stage 
@@ -494,6 +512,8 @@ function imagesLoaded(e) {
             en.y = ((Math.random()*21)+1)*scale*15;
         }while(collision(wall,sprite)||collisionSprite(boxs,sprite));
     });
+
+    initText();
     
 
     // set the Ticker to 30fps 
