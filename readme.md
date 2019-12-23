@@ -5,3 +5,4 @@ afficher les points de vie (trouver un moyen générique de le faire)
 passer le jeu en version mobile (attention au resize des éléments)
 ajouter un menu pause
 ajouter des options modifiables (elles doivent être conservées)
+faire le menu de début

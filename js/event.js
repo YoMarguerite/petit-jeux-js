@@ -1,5 +1,5 @@
-var boolDown, upPress, downPress, leftPress, rightPress;
-boolDown = upPress = downPress = leftPress = rightPress = false;
+var boolDown, upPress, downPress, leftPress, rightPress, blur;
+boolDown = upPress = downPress = leftPress = rightPress = blur = false;
 
 function onMouseDown(e) {
   if(e.button === 0){
@@ -37,7 +37,17 @@ function keyUp(e){
   }
 }
 
+function onFocus(e){
+  blur = false;
+}
+
+function onBlur(e){
+  blur = true;
+}
+
 document.onmousedown = onMouseDown;
 document.onmouseup = onMouseUp;
 document.onkeydown = keyDown;
 document.onkeyup = keyUp;
+document.onfocus = onFocus;
+document.onblur = onBlur;

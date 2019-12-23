@@ -320,7 +320,7 @@ function initEnemie(){
             }
         }
         if(time>this.lastMove+this.lapsMove){
-            if(sprite.currentAnimation!='head'){
+            //if(sprite.currentAnimation!='head'){
                 sprite.gotoAndPlay('head');
                 this.lastMove = time+(Math.random()*3+1)*1000;
                 this.lapsMove = (Math.random()*3+1)*1000;
@@ -329,7 +329,7 @@ function initEnemie(){
                 let divise = Math.sqrt(Math.pow(dx,2)+Math.pow(dy,2));
                 this.velX = dx/divise*this.speed;
                 this.velY = dy/divise*this.speed;
-            } 
+            //} 
         }
     };
 
@@ -471,6 +471,28 @@ function initText(){
     return cont
 }
 
+function initPause(){
+    
+    let rect = new createjs.Shape();
+    rect.graphics.beginFill("#ff6600").beginStroke("#a32e07").setStrokeStyle(2).drawRoundRect(0, 0, 100, 30,20);
+
+
+    let text = new createjs.Text('PAUSE','20px game','#a32e07');
+    let b = text.getBounds();
+    text.x = 50-(b.width/2);
+    text.y = 15-(b.height/2);
+    
+    let cont = new createjs.Container();
+    cont.addChild(rect);
+    cont.addChild(text);
+    cont.x = canvas.width-105;
+    cont.y = 0;
+
+    
+    stage.addChild(cont);
+    return cont
+}
+
 
 // creating a Bitmap with that image 
 // and adding the Bitmap to the stage 
@@ -522,6 +544,7 @@ function imagesLoaded(e) {
     });
 
     life = initText();
+    initPause();
     
 
     // set the Ticker to 30fps 
@@ -531,7 +554,7 @@ function imagesLoaded(e) {
 
 // update the stage every frame 
 function onTick(e) {
-    if(!e.paused){
+    if(!blur){
         stats.begin();
 
         heroes.forEach((hero) =>{
