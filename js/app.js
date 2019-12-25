@@ -1,4 +1,4 @@
-var canvas, stage, af, hero, life, pause=false, heroes=[], enemies=[], balls=[], eballs=[], explodeBalls=[], boxs=[], room, stats, scale;
+var canvas, stage, af, hero, life, heroes=[], enemies=[], balls=[], eballs=[], explodeBalls=[], boxs=[], room, stats, scale;
 
 var COSMO = 'assets/cosmo.png',
     GUN = 'assets/revolver.png',
@@ -491,17 +491,17 @@ function initPause(){
     cont.y = 0;
 
     cont.addEventListener('click', function(e){
-        let color1="#ff6600", color2="#a32e07";
-        pause = !pause;
-        createjs.Ticker.setPaused(pause);
-        
-        if(pause){
+        color1="#ff6600", color2="#a32e07";
+        let pause = createjs.Ticker.getPaused();
+        createjs.Ticker.setPaused(!pause);
+        if(!pause){
             let echange = color1;
             color1 = color2;
             color2 = echange;
         }
         rect.graphics = new createjs.Graphics().beginFill(color1).beginStroke(color2).setStrokeStyle(2).drawRoundRect(0,0,100,30,20);
         text.color = color2;
+        stage.update();
     })
     
     stage.addChild(cont);
@@ -569,7 +569,7 @@ function imagesLoaded(e) {
 
 // update the stage every frame 
 function onTick(e) {
-    if(!blur&&!pause){
+    if(!blur&&!e.paused){
         
         stats.begin();
 
