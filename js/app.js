@@ -1,4 +1,4 @@
-var canvas, stage, af, hero,life, heroes=[], enemies=[], balls=[], eballs=[], explodeBalls=[], boxs=[], room, stats, scale;
+var canvas, stage, af, hero, life, pause=false, heroes=[], enemies=[], balls=[], eballs=[], explodeBalls=[], boxs=[], room, stats, scale;
 
 var COSMO = 'assets/cosmo.png',
     GUN = 'assets/revolver.png',
@@ -72,7 +72,7 @@ function initPerso(){
     perso.name = 'hero';
 
     perso.move = function(){
-        if(createjs.Ticker.getTime()>this.lastShoot+250 && this.currentAnimation==='damage'){
+        if(createjs.Ticker.getTime(true)>this.lastShoot+250 && this.currentAnimation==='damage'){
             this.gotoAndPlay('head');
         }
         if((upPress)||(downPress)||(leftPress)||(rightPress)){
@@ -90,7 +90,7 @@ function initPerso(){
         if(life === 0){
             this.gotoAndPlay('dead');
         }else{
-            this.lastShoot = createjs.Ticker.getTime();
+            this.lastShoot = createjs.Ticker.getTime(true);
             this.gotoAndPlay('damage');
         }
     };
@@ -129,7 +129,7 @@ function initHero(){
         let y = stage.mouseY-this.parent.y;
         this.rotation = Math.sign(y)*rotation(x,y);
     
-        let tick = createjs.Ticker.getTime();
+        let tick = createjs.Ticker.getTime(true);
         if(tick>(this.lastShoot+250)){
             if(this.currentAnimation === 'shoot'){
                 this.gotoAndPlay('gun');
@@ -153,7 +153,7 @@ function initHero(){
     };
 
     var cont = new createjs.Container();
-    //cont.addChild(new createjs.Bitmap(af[BLOCK]));
+    
     cont.addChild(perso);
     cont.addChild(gun);
 
@@ -234,13 +234,13 @@ function initGobelin(){
         if(life === 0){
             this.gotoAndPlay('dead');
         }else{
-            this.lastShoot = createjs.Ticker.getTime();
+            this.lastShoot = createjs.Ticker.getTime(true);
             this.gotoAndPlay('damage');
         }
     };
 
     gobelin.move = function(){
-        if(createjs.Ticker.getTime()>this.lastShoot+250&&this.currentAnimation==='damage'){
+        if(createjs.Ticker.getTime(true)>this.lastShoot+250&&this.currentAnimation==='damage'){
             this.gotoAndPlay('head');
         }
     };
@@ -253,14 +253,14 @@ function initEnemie(){
     let gobelin = initGobelin();
     let gun = initGun(gobelin);
     gun.y = 4;
-    gun.lastShoot = createjs.Ticker.getTime();
+    gun.lastShoot = createjs.Ticker.getTime(true);
     gun.nextShoot = gun.lastShoot+((Math.random()*5)+5)*1000;
     gun.move = function(){
         let x = hero.x-(room.x-(this.parent.regX*this.parent.scaleX)+this.parent.x);
         let y = hero.y-(room.y-(this.parent.regY*this.parent.scaleY)+this.parent.y);
         this.rotation = Math.sign(x*y)*rotation(x,y);
     
-        let tick = createjs.Ticker.getTime();
+        let tick = createjs.Ticker.getTime(true);
         if(tick>(this.lastShoot+250)){
             if(this.currentAnimation === 'shoot'){
                 this.gotoAndPlay('gun');
@@ -299,7 +299,7 @@ function initEnemie(){
         });
 
 
-        let time = createjs.Ticker.getTime();
+        let time = createjs.Ticker.getTime(true);
         let sprite = this.children[0];
         if(time>this.lastMove&&time<this.lastMove+this.lapsMove){  
 
@@ -473,11 +473,13 @@ function initText(){
 
 function initPause(){
     
+    let color1="#ff6600", color2="#a32e07";
+
     let rect = new createjs.Shape();
-    rect.graphics.beginFill("#ff6600").beginStroke("#a32e07").setStrokeStyle(2).drawRoundRect(0, 0, 100, 30,20);
+    rect.graphics.beginFill(color1).beginStroke(color2).setStrokeStyle(2).drawRoundRect(0, 0, 100, 30,20);
 
 
-    let text = new createjs.Text('PAUSE','20px game','#a32e07');
+    let text = new createjs.Text('PAUSE','18px game',color2);
     let b = text.getBounds();
     text.x = 50-(b.width/2);
     text.y = 15-(b.height/2);
@@ -488,6 +490,19 @@ function initPause(){
     cont.x = canvas.width-105;
     cont.y = 0;
 
+    cont.addEventListener('click', function(e){
+        let color1="#ff6600", color2="#a32e07";
+        pause = !pause;
+        createjs.Ticker.setPaused(pause);
+        
+        if(pause){
+            let echange = color1;
+            color1 = color2;
+            color2 = echange;
+        }
+        rect.graphics = new createjs.Graphics().beginFill(color1).beginStroke(color2).setStrokeStyle(2).drawRoundRect(0,0,100,30,20);
+        text.color = color2;
+    })
     
     stage.addChild(cont);
     return cont
@@ -554,7 +569,8 @@ function imagesLoaded(e) {
 
 // update the stage every frame 
 function onTick(e) {
-    if(!blur){
+    if(!blur&&!pause){
+        
         stats.begin();
 
         heroes.forEach((hero) =>{
