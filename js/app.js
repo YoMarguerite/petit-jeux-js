@@ -1,13 +1,14 @@
-var canvas, stage, af, hero, life, heroes=[], enemies=[], balls=[], eballs=[], explodeBalls=[], boxs=[], room, stats, scale;
+var canvas, stage, af, hero, life, heroes=[], enemies=[], balls=[], eballs=[], explodeBalls=[], boxs=[], room, doors=[], stats, scale;
 
-var COSMO = 'assets/cosmo.png',
-    GUN = 'assets/revolver.png',
-    FIRE = 'assets/fire.png',
-    GOBELIN = 'assets/gobelin.png',
-    BLOCK = 'assets/block.png',
-    WALL = 'assets/wall3.png',
-    GROUND = 'assets/ground.png',
-    BOX = 'assets/box.png';
+var COSMO = 'assets/sprite/cosmo.png',
+    GUN = 'assets/weapon/revolver/gun.png',
+    FIRE = 'assets/weapon/revolver/fire.png',
+    GOBELIN = 'assets/sprite/gobelin.png',
+    BLOCK = 'assets/obstacle/block.png',
+    WALL = 'assets/wall/test.png',
+    GROUND = 'assets/wall/ground.png',
+    DOOR = 'assets/wall/door.png',
+    BOX = 'assets/obstacle/box.png';
 
 
 pixelCollision = ndgmr.checkPixelCollision;
@@ -34,7 +35,7 @@ function init() {
     af.onComplete = function() {
         imagesLoaded();
     }
-    af.loadAssets([COSMO,GUN,FIRE,GOBELIN,WALL,GROUND,BOX,BLOCK]);
+    af.loadAssets([COSMO,GUN,FIRE,GOBELIN,WALL,GROUND,DOOR,BOX,BLOCK]);
 }
 
 function initStats(){
@@ -385,11 +386,11 @@ function initRoom(){
         }
         
         this.x += x;
-        if(collision(wall,ref)||(collisionSprite(boxs,ref))){
+        if(collision(wall,ref)||(collisionSprite(boxs,ref))||(collisionDoor(doors,ref))){
             this.x -= x;
         }
         this.y += y;
-        if(collision(wall,ref)||(collisionSprite(boxs,ref))){
+        if(collision(wall,ref)||(collisionSprite(boxs,ref))||(collisionDoor(doors,ref))){
             this.y -= y;
         }
     };
@@ -443,11 +444,18 @@ function initDoor(){
         frames: {width:x, height:y, count:4, regX:x/2, regY:y/2}, 
         animations:{
             close:{frames:[0],next:false}, 
-            open:{frames:[1,2,3],speed:0.15, next:false}
+            opening:{frames:[0,1,2,3],speed:0.15, next:false},
+            closing:{frames:[3,2,1,0],speed:0.15, next:false}
         }
     });
 
     let door = new createjs.Sprite(ss);
+    door.gotoAndPlay('close');
+    door.x = 135*scale;
+    door.y = 358*scale;
+
+    room.addChild(door)
+    doors.push(door);
 }
 
 function initText(){
@@ -515,7 +523,7 @@ function imagesLoaded(e) {
     initRoom();
     initStats();
     initHero();
-    
+    initDoor();
 
     initBlock(4*scale*15,5*scale*15);
 
@@ -585,7 +593,7 @@ function onTick(e) {
 
         eballs = eballs.filter((ball) => {
             ball.move();
-            if(!collision(wall,ball,ball.damage)&&(!collisionSprite(boxs,ball))&&(!collisionContainer(heroes,ball))){
+            if(!collision(wall,ball,ball.damage)&&(!collisionSprite(boxs,ball))&&(!collisionContainer(heroes,ball))&&(!collisionDoor(doors,ball))){
                 return ball;
             }
             ballFinish(ball);
@@ -593,7 +601,7 @@ function onTick(e) {
 
         balls = balls.filter((ball) => {
             ball.move();
-            if(!collision(wall,ball,ball.damage)&&(!collisionSprite(boxs,ball)&&(!collisionContainer(enemies,ball)))){
+            if(!collision(wall,ball,ball.damage)&&(!collisionSprite(boxs,ball)&&(!collisionContainer(enemies,ball))&&(!collisionDoor(doors,ball)))){
                 return ball;
             }
             ballFinish(ball);
@@ -630,6 +638,13 @@ function collisionSprite(array, ref){
             }            
             return true;
         }
+    })
+    return (index);
+}
+
+function collisionDoor(array, ref){
+    let index = array.find((el) => {
+        return pixelCollision(el,ref);
     })
     return (index);
 }

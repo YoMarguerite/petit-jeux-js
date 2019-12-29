@@ -1,5 +1,5 @@
-var boolDown, upPress, downPress, leftPress, rightPress, blur;
-boolDown = upPress = downPress = leftPress = rightPress = blur = false;
+var boolDown, upPress, downPress, leftPress, rightPress, blur, oPress;
+boolDown = upPress = downPress = leftPress = rightPress = blur = oPress = false;
 
 function onMouseDown(e) {
   if(e.button === 0){
