@@ -487,7 +487,7 @@ function initPause(){
     rect.graphics.beginFill(color1).beginStroke(color2).setStrokeStyle(2).drawRoundRect(0, 0, 100, 30,20);
 
 
-    let text = new createjs.Text('PAUSE','18px game',color2);
+    let text = new createjs.Text('||','18px game',color2);
     let b = text.getBounds();
     text.x = 50-(b.width/2);
     text.y = 15-(b.height/2);
@@ -500,15 +500,17 @@ function initPause(){
 
     cont.addEventListener('click', function(e){
         color1="#ff6600", color2="#a32e07";
-        let pause = createjs.Ticker.getPaused();
+        let pause = createjs.Ticker.getPaused(), textButton = '||';
         createjs.Ticker.setPaused(!pause);
         if(!pause){
             let echange = color1;
             color1 = color2;
             color2 = echange;
+            textButton = '▶';
         }
         rect.graphics = new createjs.Graphics().beginFill(color1).beginStroke(color2).setStrokeStyle(2).drawRoundRect(0,0,100,30,20);
         text.color = color2;
+        text.text = textButton;
         stage.update();
     })
     
