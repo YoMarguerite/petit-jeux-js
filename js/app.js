@@ -312,12 +312,12 @@ function initEnemie(){
             }    
 
             this.x+=this.velX;            
-            if(collisionSprite(boxs,sprite)||collisionDoor(walls,sprite)||collisionDoor(doors,sprite)){
+            if(collisionSprite(boxs,sprite)||collisionDoor(walls.concat(doors),sprite)){
                 this.x-=this.velX;
             }
             
             this.y+=this.velY;            
-            if(collisionSprite(boxs,sprite)||collisionDoor(walls,sprite)||collisionDoor(doors,sprite)){
+            if(collisionSprite(boxs,sprite)||collisionDoor(walls.concat(doors),sprite)){
                 this.y-=this.velY;
             }
         }
@@ -356,17 +356,15 @@ function initRoom(){
     let ground = new createjs.Bitmap(af[GROUND]);
     ground.name='ground';
     let wall = new createjs.Bitmap(af[WALL]);
-    wall.name='wall';
     let waywall = new createjs.Bitmap(af[WAYWALL]);
-    waywall.name='waywall';
     waywall.x = 15*6*scale;
     waywall.y = 15*25*scale-(6*scale);
     let littleground = new createjs.Bitmap(af[LITTLEGROUND]);
     littleground.x = 0;
-    littleground.y = 15*30*scale;
+    littleground.y = 15*34*scale;
     let littlewall = new createjs.Bitmap(af[LITTLEWALL]);
     littlewall.x = 0;
-    littlewall.y = 15*30*scale;
+    littlewall.y = 15*34*scale;
 
     walls.push(wall,waywall,littlewall);
       
@@ -385,7 +383,6 @@ function initRoom(){
     room.move = function() {
 
         let ref = hero.getChildByName('hero'),
-            wall = this.getChildByName('wall'),
             x=0,y=0;
 
         if(upPress){
@@ -402,11 +399,11 @@ function initRoom(){
         }
         
         this.x += x;
-        if(collisionDoor(walls,ref)||(collisionSprite(boxs,ref))||(collisionDoor(doors,ref))){
+        if(collisionDoor(walls.concat(doors),ref)||(collisionSprite(boxs,ref))){
             this.x -= x;
         }
         this.y += y;
-        if(collisionDoor(walls,ref)||(collisionSprite(boxs,ref))||(collisionDoor(doors,ref))){
+        if(collisionDoor(walls.concat(doors),ref)||(collisionSprite(boxs,ref))){
             this.y -= y;
         }
     };
@@ -466,7 +463,7 @@ function initDoor(x,y){
     });
 
     let door = new createjs.Sprite(ss);
-    door.gotoAndPlay('close');
+    door.gotoAndPlay('opening');
     door.x = x;
     door.y = y;
 
@@ -580,7 +577,7 @@ function imagesLoaded(e) {
         do{
             en.x = ((Math.random()*15)+1)*scale*15;
             en.y = ((Math.random()*21)+1)*scale*15;
-        }while(collisionDoor(walls,sprite)||collisionSprite(boxs,sprite));
+        }while(collisionDoor(walls.concat(doors),sprite)||collisionSprite(boxs,sprite));
     });
 
     life = initText();
@@ -613,12 +610,9 @@ function onTick(e) {
             finish = true;
         }
 
-
-        let wall = room.getChildByName('wall');
-        
         eballs = eballs.filter((ball) => {
             ball.move();
-            if(!collisionDoor(walls,ball)&&(!collisionSprite(boxs,ball))&&(!collisionContainer(heroes,ball))&&(!collisionDoor(doors,ball))){
+            if(!collisionDoor(walls.concat(doors),ball)&&(!collisionSprite(boxs,ball))&&(!collisionContainer(heroes,ball))){
                 return ball;
             }
             ballFinish(ball);
@@ -626,7 +620,7 @@ function onTick(e) {
         
         balls = balls.filter((ball) => {
             ball.move();
-            if(!collisionDoor(walls,ball)&&(!collisionSprite(boxs,ball)&&(!collisionContainer(enemies,ball))&&(!collisionDoor(doors,ball)))){
+            if(!collisionDoor(walls.concat(doors),ball)&&(!collisionSprite(boxs,ball)&&(!collisionContainer(enemies,ball)))){
                 return ball;
             }
             ballFinish(ball);
