@@ -1,4 +1,4 @@
-var canvas, stage, af, hero, life, heroes=[], enemies=[], balls=[], eballs=[], explodeBalls=[], boxs=[], room, doors=[], stats, scale;
+var canvas, stage, af, hero, life, heroes=[], enemies=[], balls=[], eballs=[], explodeBalls=[], boxs=[], room, walls=[], doors=[], stats, scale;
 var finish = false;
 var COSMO = 'assets/sprite/cosmo.png',
     GUN = 'assets/weapon/revolver/gun.png',
@@ -8,6 +8,8 @@ var COSMO = 'assets/sprite/cosmo.png',
     WALL = 'assets/wall/test.png',
     GROUND = 'assets/wall/ground.png',
     WAYWALL = 'assets/wall/way_wall.png',
+    LITTLEWALL = 'assets/wall/little.png',
+    LITTLEGROUND = 'assets/wall/little_ground.png',
     DOOR = 'assets/wall/door.png',
     BOX = 'assets/obstacle/box.png';
 
@@ -37,7 +39,7 @@ function init() {
     af.onComplete = function() {
         imagesLoaded();
     }
-    af.loadAssets([COSMO,GUN,FIRE,GOBELIN,WALL,GROUND,WAYWALL,DOOR,BOX,BLOCK]);
+    af.loadAssets([COSMO,GUN,FIRE,GOBELIN,WALL,GROUND,WAYWALL,LITTLEWALL,LITTLEGROUND,DOOR,BOX,BLOCK]);
 }
 
 function initStats(){
@@ -303,21 +305,19 @@ function initEnemie(){
 
         let time = createjs.Ticker.getTime(true);
         let sprite = this.children[0];
-        if(time>this.lastMove&&time<this.lastMove+this.lapsMove){  
-
-            let wall = room.getChildByName('wall');
+        if(time>this.lastMove&&time<this.lastMove+this.lapsMove){ 
 
             if(sprite.currentAnimation==='head'){
                 sprite.gotoAndPlay('move');
             }    
 
             this.x+=this.velX;            
-            if(collisionSprite(boxs,sprite)||collision(wall,sprite)||collisionDoor(doors,sprite)){
+            if(collisionSprite(boxs,sprite)||collisionDoor(walls,sprite)||collisionDoor(doors,sprite)){
                 this.x-=this.velX;
             }
             
             this.y+=this.velY;            
-            if(collisionSprite(boxs,sprite)||collision(wall,sprite)||collisionDoor(doors,sprite)){
+            if(collisionSprite(boxs,sprite)||collisionDoor(walls,sprite)||collisionDoor(doors,sprite)){
                 this.y-=this.velY;
             }
         }
@@ -361,13 +361,22 @@ function initRoom(){
     waywall.name='waywall';
     waywall.x = 15*6*scale;
     waywall.y = 15*25*scale-(6*scale);
+    let littleground = new createjs.Bitmap(af[LITTLEGROUND]);
+    littleground.x = 0;
+    littleground.y = 15*30*scale;
+    let littlewall = new createjs.Bitmap(af[LITTLEWALL]);
+    littlewall.x = 0;
+    littlewall.y = 15*30*scale;
 
+    walls.push(wall,waywall,littlewall);
       
     room = new createjs.Container();
 
     room.addChild(ground);
     room.addChild(wall);  
     room.addChild(waywall);
+    room.addChild(littleground);
+    room.addChild(littlewall);
     
     room.x = canvas.width/2;
     room.y = canvas.height/2;
@@ -393,11 +402,11 @@ function initRoom(){
         }
         
         this.x += x;
-        if(collision(wall,ref)||(collisionSprite(boxs,ref))||(collisionDoor(doors,ref))){
+        if(collisionDoor(walls,ref)||(collisionSprite(boxs,ref))||(collisionDoor(doors,ref))){
             this.x -= x;
         }
         this.y += y;
-        if(collision(wall,ref)||(collisionSprite(boxs,ref))||(collisionDoor(doors,ref))){
+        if(collisionDoor(walls,ref)||(collisionSprite(boxs,ref))||(collisionDoor(doors,ref))){
             this.y -= y;
         }
     };
@@ -444,22 +453,22 @@ function initBox(x,y){
     boxs.push(box);
 }
 
-function initDoor(){
-    let x=60, y=25;
+function initDoor(x,y){
+    let width=60, height=25;
     let ss = new createjs.SpriteSheet({
         images:[af[DOOR]],
-        frames: {width:x, height:y, count:4, regX:x/2, regY:y/2}, 
+        frames: {width:width, height:height, count:4, regX:width/2, regY:height/2}, 
         animations:{
             close:{frames:[0],next:false}, 
-            opening:{frames:[0,1,2,3],speed:0.15, next:false},
-            closing:{frames:[3,2,1,0],speed:0.15, next:false}
+            opening:{frames:[0,1,2,3],speed:0.1, next:false},
+            closing:{frames:[3,2,1,0],speed:0.1, next:false}
         }
     });
 
     let door = new createjs.Sprite(ss);
     door.gotoAndPlay('close');
-    door.x = 135*scale;
-    door.y = 358*scale;
+    door.x = x;
+    door.y = y;
 
     room.addChild(door)
     doors.push(door);
@@ -532,7 +541,7 @@ function imagesLoaded(e) {
     initRoom();
     initStats();
     initHero();
-    initDoor();
+    initDoor(15*9*scale,358*scale);
 
     initBlock(4*scale*15,5*scale*15);
 
@@ -557,7 +566,6 @@ function imagesLoaded(e) {
     initEnemie();
     initEnemie();
     initEnemie();
-    console.log(enemies);
 
     let ground = room.getChildByName('ground');
     room.children.forEach((child) => {
@@ -567,13 +575,12 @@ function imagesLoaded(e) {
         child.regY = (ground.image.height/2);
     });
 
-    let wall = room.getChildByName('wall');
     enemies.forEach((en)=>{
         let sprite = en.children[0];
         do{
             en.x = ((Math.random()*15)+1)*scale*15;
             en.y = ((Math.random()*21)+1)*scale*15;
-        }while(collision(wall,sprite)||collisionSprite(boxs,sprite));
+        }while(collisionDoor(walls,sprite)||collisionSprite(boxs,sprite));
     });
 
     life = initText();
@@ -600,7 +607,6 @@ function onTick(e) {
         })
 
         if((enemies.length === 0)&&(!finish)){
-            console.log(enemies.length === 0)
             doors.forEach((door)=>{
                 door.gotoAndPlay('opening');
             })
@@ -612,7 +618,7 @@ function onTick(e) {
         
         eballs = eballs.filter((ball) => {
             ball.move();
-            if(!collision(wall,ball,ball.damage)&&(!collisionSprite(boxs,ball))&&(!collisionContainer(heroes,ball))&&(!collisionDoor(doors,ball))){
+            if(!collisionDoor(walls,ball)&&(!collisionSprite(boxs,ball))&&(!collisionContainer(heroes,ball))&&(!collisionDoor(doors,ball))){
                 return ball;
             }
             ballFinish(ball);
@@ -620,7 +626,7 @@ function onTick(e) {
         
         balls = balls.filter((ball) => {
             ball.move();
-            if(!collision(wall,ball,ball.damage)&&(!collisionSprite(boxs,ball)&&(!collisionContainer(enemies,ball))&&(!collisionDoor(doors,ball)))){
+            if(!collisionDoor(walls,ball)&&(!collisionSprite(boxs,ball)&&(!collisionContainer(enemies,ball))&&(!collisionDoor(doors,ball)))){
                 return ball;
             }
             ballFinish(ball);
@@ -663,7 +669,7 @@ function collisionSprite(array, ref){
 
 function collisionDoor(array, ref){
     let index = array.find((el) => {
-        return pixelCollision(el,ref);
+        return pixelCollision(el,ref,window.alphaThresh);
     })
     return (index);
 }
