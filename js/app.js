@@ -1,5 +1,5 @@
 var canvas, stage, af, hero, life, heroes=[], enemies=[], balls=[], eballs=[], explodeBalls=[], boxs=[], room, doors=[], stats, scale;
-
+var finish = false;
 var COSMO = 'assets/sprite/cosmo.png',
     GUN = 'assets/weapon/revolver/gun.png',
     FIRE = 'assets/weapon/revolver/fire.png',
@@ -7,6 +7,7 @@ var COSMO = 'assets/sprite/cosmo.png',
     BLOCK = 'assets/obstacle/block.png',
     WALL = 'assets/wall/test.png',
     GROUND = 'assets/wall/ground.png',
+    WAYWALL = 'assets/wall/way_wall.png',
     DOOR = 'assets/wall/door.png',
     BOX = 'assets/obstacle/box.png';
 
@@ -30,12 +31,13 @@ function init() {
     // initializing the stage 
     stage = new createjs.Stage(canvas);
    
+    scale = size(10, canvas.height, 26);
     // creating a new HTMLImage
     af = new AssetFactory();
     af.onComplete = function() {
         imagesLoaded();
     }
-    af.loadAssets([COSMO,GUN,FIRE,GOBELIN,WALL,GROUND,DOOR,BOX,BLOCK]);
+    af.loadAssets([COSMO,GUN,FIRE,GOBELIN,WALL,GROUND,WAYWALL,DOOR,BOX,BLOCK]);
 }
 
 function initStats(){
@@ -65,8 +67,7 @@ function initPerso(){
     var perso = new createjs.Sprite(createPersoSS([af[COSMO]],24,26));
     perso.gotoAndPlay('head');
     perso.frameRef = 0;
-
-    scale = size(10, canvas.height, 28);
+    
     perso.scaleX = scale;
     perso.scaleY = scale;
 
@@ -311,12 +312,12 @@ function initEnemie(){
             }    
 
             this.x+=this.velX;            
-            if(collisionSprite(boxs,sprite)||collision(wall,sprite)){
+            if(collisionSprite(boxs,sprite)||collision(wall,sprite)||collisionDoor(doors,sprite)){
                 this.x-=this.velX;
             }
             
             this.y+=this.velY;            
-            if(collisionSprite(boxs,sprite)||collision(wall,sprite)){
+            if(collisionSprite(boxs,sprite)||collision(wall,sprite)||collisionDoor(doors,sprite)){
                 this.y-=this.velY;
             }
         }
@@ -356,11 +357,17 @@ function initRoom(){
     ground.name='ground';
     let wall = new createjs.Bitmap(af[WALL]);
     wall.name='wall';
+    let waywall = new createjs.Bitmap(af[WAYWALL]);
+    waywall.name='waywall';
+    waywall.x = 15*6*scale;
+    waywall.y = 15*25*scale-(6*scale);
+
       
     room = new createjs.Container();
 
     room.addChild(ground);
     room.addChild(wall);  
+    room.addChild(waywall);
     
     room.x = canvas.width/2;
     room.y = canvas.height/2;
@@ -550,6 +557,7 @@ function imagesLoaded(e) {
     initEnemie();
     initEnemie();
     initEnemie();
+    console.log(enemies);
 
     let ground = room.getChildByName('ground');
     room.children.forEach((child) => {
@@ -591,8 +599,17 @@ function onTick(e) {
             en.move();
         })
 
-        let wall = room.getChildByName('wall');
+        if((enemies.length === 0)&&(!finish)){
+            console.log(enemies.length === 0)
+            doors.forEach((door)=>{
+                door.gotoAndPlay('opening');
+            })
+            finish = true;
+        }
 
+
+        let wall = room.getChildByName('wall');
+        
         eballs = eballs.filter((ball) => {
             ball.move();
             if(!collision(wall,ball,ball.damage)&&(!collisionSprite(boxs,ball))&&(!collisionContainer(heroes,ball))&&(!collisionDoor(doors,ball))){
@@ -600,7 +617,7 @@ function onTick(e) {
             }
             ballFinish(ball);
         });
-
+        
         balls = balls.filter((ball) => {
             ball.move();
             if(!collision(wall,ball,ball.damage)&&(!collisionSprite(boxs,ball)&&(!collisionContainer(enemies,ball))&&(!collisionDoor(doors,ball)))){
@@ -608,7 +625,7 @@ function onTick(e) {
             }
             ballFinish(ball);
         });
-
+            
         explodeBalls = explodeBalls.filter((ball) => {
             if(ball.currentAnimationFrame > 4){
                 stage.removeChild(ball);
@@ -617,7 +634,7 @@ function onTick(e) {
                 return ball;
             }
         });
-    
+
         stage.update();
     
         stats.end();
