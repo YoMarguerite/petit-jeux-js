@@ -463,6 +463,7 @@ function initPick(x,y){
     pick.gotoAndPlay('action');
     pick.x = x;
     pick.y = y;
+    pick.damage = 1;
     room.addChild(pick);
     picks.push(pick);
 }
@@ -618,6 +619,7 @@ function onTick(e) {
         stats.begin();
 
         heroes.forEach((hero) =>{
+            collisionRect(picks,hero);
             hero.move();
         });
 
@@ -670,6 +672,18 @@ function ballFinish(ball){
     explodeBalls.push(ball);
 }
 
+function collisionRect(array, ref){
+    let sprite = ref.getChildByName('hero');
+    let index = array.find((el) => {
+        if(rectCollision(el,sprite)){
+            if(el.currentAnimationFrame === 3){
+                ref.takeDamage(el.damage);
+                return true;
+            }
+        }
+    })
+    return index;
+}
 
 function collisionSprite(array, ref){
     let index = array.find((el) => {
@@ -680,7 +694,7 @@ function collisionSprite(array, ref){
             return true;
         }
     })
-    return (index);
+    return index;
 }
 
 function collisionDoor(array, ref){
