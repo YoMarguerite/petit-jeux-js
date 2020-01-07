@@ -1,4 +1,4 @@
-var canvas, stage, af, hero, life, heroes=[], enemies=[], balls=[], eballs=[], explodeBalls=[], boxs=[], room, walls=[], doors=[], stats, scale;
+var canvas, stage, af, hero, life, heroes=[], enemies=[], balls=[], eballs=[], explodeBalls=[], boxs=[], picks=[], room, walls=[], doors=[], stats, scale;
 var finish = false;
 var COSMO = 'assets/sprite/cosmo.png',
     GUN = 'assets/weapon/revolver/gun.png',
@@ -11,7 +11,8 @@ var COSMO = 'assets/sprite/cosmo.png',
     LITTLEWALL = 'assets/wall/little.png',
     LITTLEGROUND = 'assets/wall/little_ground.png',
     DOOR = 'assets/wall/door.png',
-    BOX = 'assets/obstacle/box.png';
+    BOX = 'assets/obstacle/box.png',
+    PICK = 'assets/obstacle/pick.png';
 
 
 pixelCollision = ndgmr.checkPixelCollision;
@@ -39,7 +40,7 @@ function init() {
     af.onComplete = function() {
         imagesLoaded();
     }
-    af.loadAssets([COSMO,GUN,FIRE,GOBELIN,WALL,GROUND,WAYWALL,LITTLEWALL,LITTLEGROUND,DOOR,BOX,BLOCK]);
+    af.loadAssets([COSMO,GUN,FIRE,GOBELIN,WALL,GROUND,WAYWALL,LITTLEWALL,LITTLEGROUND,DOOR,BOX,BLOCK,PICK]);
 }
 
 function initStats(){
@@ -450,6 +451,22 @@ function initBox(x,y){
     boxs.push(box);
 }
 
+function initPick(x,y){
+    let pickss = new createjs.SpriteSheet({
+        images:[af[PICK]],
+        frames: {width:15,height:15,count:4},
+        animations:{
+            action:{frames:[0,1,2,3,2,1,0,0,0,0,0],speed:0.1}
+        }
+    });
+    let pick = new createjs.Sprite(pickss);
+    pick.gotoAndPlay('action');
+    pick.x = x;
+    pick.y = y;
+    room.addChild(pick);
+    picks.push(pick);
+}
+
 function initDoor(x,y){
     let width=60, height=25;
     let ss = new createjs.SpriteSheet({
@@ -559,6 +576,11 @@ function imagesLoaded(e) {
     initBlock(4*scale*15,16*scale*15);
 
     initBlock(12*scale*15,16*scale*15);
+
+    initPick(3*15*scale,39*15*scale);
+    initPick(3*15*scale,40*15*scale);
+    initPick(4*15*scale,39*15*scale);
+    initPick(4*15*scale,40*15*scale);
 
     initEnemie();
     initEnemie();
