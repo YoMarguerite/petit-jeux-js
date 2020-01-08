@@ -1,4 +1,4 @@
-var canvas, stage, af, hero, life, heroes=[], enemies=[], balls=[], eballs=[], explodeBalls=[], boxs=[], picks=[], room, walls=[], doors=[], stats, scale;
+var canvas, stage, af, hero, life, shield, heroes=[], enemies=[], balls=[], eballs=[], explodeBalls=[], boxs=[], picks=[], room, walls=[], doors=[], stats, scale;
 var finish = false;
 var COSMO = 'assets/sprite/cosmo.png',
     GUN = 'assets/weapon/revolver/gun.png',
@@ -58,7 +58,7 @@ function createPersoSS(images,x,y){
         animations:{
             head:{frames:[0,1],speed:0.15}, 
             move:{frames:[0,2],speed:0.15},
-            damage:{frames:[3],next:false},
+            damage:{frames:[3],speed:0.1,next:"head"},
             dead:{frames:[4], next:false}
         }
     });
@@ -77,9 +77,6 @@ function initPerso(){
     perso.name = 'hero';
 
     perso.move = function(){
-        if(createjs.Ticker.getTime(true)>this.lastShoot+250 && this.currentAnimation==='damage'){
-            this.gotoAndPlay('head');
-        }
         if((upPress)||(downPress)||(leftPress)||(rightPress)){
             if(this.currentAnimation === 'head'){
                 this.gotoAndPlay('move');
@@ -165,8 +162,20 @@ function initHero(){
     cont.x = canvas.width/2;
     cont.y = canvas.height/2;
     cont.life = 5;
+    cont.shield = 5;
+    cont.lastRecovery = 0;
     
     cont.move = function(){
+        if(this.shield < 5){
+            if(createjs.Ticker.getTime(true)>this.lastRecovery){
+                this.lastRecovery = createjs.Ticker.getTime()+3000;
+                this.shield++;
+                shield.children[2].text = this.shield+'/5';
+                let rect2 = new createjs.Shape();
+                rect2.graphics.beginFill("blue").drawRoundRect(0, 0, 200*(this.shield/5), 30,20);
+                shield.children[1] = rect2;
+            }
+        }
         this.scaleX = stage.mouseX < this.x ? -this.scaleY : this.scaleY;
         this.children.forEach((child) => {
             child.move();
@@ -175,19 +184,31 @@ function initHero(){
     };
 
     cont.takeDamage = function(damage){
-        this.life -= damage;
-        if(this.life <= 0){
-            this.life = 0;
-            let index = heroes.indexOf(this);
-            heroes.splice(index,1);
-            this.removeChild(this.children[1]);
-        }
-        this.children[0].takeDamage(this.life);
+        if(perso.currentAnimation !== 'damage'){
+            this.shield -= damage;
+            if(this.shield < 0){
+                this.life += this.shield;
+                this.shield = 0;
+                if(this.life <= 0){
+                    this.life = 0;
+                    let index = heroes.indexOf(this);
+                    heroes.splice(index,1);
+                    this.removeChild(gun);
+                }
+            }
+            
+            perso.takeDamage(this.life);
+    
+            life.children[2].text = this.life+'/5';
+            let rect = new createjs.Shape();
+            rect.graphics.beginFill("red").drawRoundRect(0, 0, 200*(this.life/5), 30,20);
+            life.children[1] = rect;
 
-        life.children[2].text = this.life+'/5';
-        let rect = new createjs.Shape();
-        rect.graphics.beginFill("red").drawRoundRect(0, 0, 200*(this.life/5), 30,20);
-        life.children[1] = rect;
+            shield.children[2].text = this.shield+'/5';
+            let rect2 = new createjs.Shape();
+            rect2.graphics.beginFill("blue").drawRoundRect(0, 0, 200*(this.shield/5), 30,20);
+            shield.children[1] = rect2;
+        }
     };
 
     stage.addChild(cont);
@@ -229,7 +250,7 @@ function initBall(x,y,scaleX,scaleY,rotation,dx,dy,speed=20,damage = 1){
 
 function initGobelin(){
 
-    var gobelin = new createjs.Sprite(createPersoSS([af[GOBELIN]],18,26));
+    let gobelin = new createjs.Sprite(createPersoSS([af[GOBELIN]],18,26));
     gobelin.gotoAndPlay('move');
     gobelin.frameRef = 0;
     gobelin.lastShoot = 0;
@@ -245,9 +266,6 @@ function initGobelin(){
     };
 
     gobelin.move = function(){
-        if(createjs.Ticker.getTime(true)>this.lastShoot+250&&this.currentAnimation==='damage'){
-            this.gotoAndPlay('head');
-        }
     };
     
     return gobelin;
@@ -300,39 +318,36 @@ function initEnemie(){
         let coef = Math.sign(hero.x-(room.x-(this.regX*this.scaleX)+this.x));
         this.children.forEach((child) => {
             child.scaleX = coef*child.scaleY;
-            child.move();
         });
+        gun.move();
 
 
         let time = createjs.Ticker.getTime(true);
-        let sprite = this.children[0];
         if(time>this.lastMove&&time<this.lastMove+this.lapsMove){ 
 
-            if(sprite.currentAnimation==='head'){
-                sprite.gotoAndPlay('move');
+            if(gobelin.currentAnimation==='head'){
+                gobelin.gotoAndPlay('move');
             }    
 
             this.x+=this.velX;            
-            if(collisionSprite(boxs,sprite)||collisionDoor(walls.concat(doors),sprite)){
+            if(collisionSprite(boxs,gobelin)||collisionDoor(walls.concat(doors),gobelin)){
                 this.x-=this.velX;
             }
             
             this.y+=this.velY;            
-            if(collisionSprite(boxs,sprite)||collisionDoor(walls.concat(doors),sprite)){
+            if(collisionSprite(boxs,gobelin)||collisionDoor(walls.concat(doors),gobelin)){
                 this.y-=this.velY;
             }
         }
         if(time>this.lastMove+this.lapsMove){
-            //if(sprite.currentAnimation!='head'){
-                sprite.gotoAndPlay('head');
-                this.lastMove = time+(Math.random()*3+1)*1000;
-                this.lapsMove = (Math.random()*3+1)*1000;
-                let dx = Math.floor(hero.x-(room.x-this.regX*scale+this.x));
-                let dy = Math.floor(hero.y-(room.y-this.regY*scale+this.y));
-                let divise = Math.sqrt(Math.pow(dx,2)+Math.pow(dy,2));
-                this.velX = dx/divise*this.speed;
-                this.velY = dy/divise*this.speed;
-            //} 
+            gobelin.gotoAndPlay('head');
+            this.lastMove = time+(Math.random()*3+1)*1000;
+            this.lapsMove = (Math.random()*3+1)*1000;
+            let dx = Math.floor(hero.x-(room.x-this.regX*scale+this.x));
+            let dy = Math.floor(hero.y-(room.y-this.regY*scale+this.y));
+            let divise = Math.sqrt(Math.pow(dx,2)+Math.pow(dy,2));
+            this.velX = dx/divise*this.speed;
+            this.velY = dy/divise*this.speed;
         }
     };
 
@@ -345,7 +360,7 @@ function initEnemie(){
             this.removeChild(this.children[1]);
             room.setChildIndex(this,14);
         }
-        this.children[0].takeDamage(this.life);
+        gobelin.takeDamage(this.life);
     };
 
     room.addChild(cont);
@@ -489,7 +504,7 @@ function initDoor(x,y){
     doors.push(door);
 }
 
-function initText(){
+function initLife(){
     
     let rect = new createjs.Shape();
     rect.graphics.beginFill("grey").beginStroke("black").setStrokeStyle(2).drawRoundRect(0, 0, 200, 30,20);
@@ -506,6 +521,29 @@ function initText(){
     cont.addChild(rect2);
     cont.addChild(text);
     
+    stage.addChild(cont);
+    return cont
+}
+
+function initShield(){
+    
+    let rect = new createjs.Shape();
+    rect.graphics.beginFill("grey").beginStroke("black").setStrokeStyle(2).drawRoundRect(0, 0, 200, 30,20);
+    let rect2 = new createjs.Shape();
+    rect2.graphics.beginFill("blue").drawRoundRect(0, 0, 200, 30,20);
+
+    let text = new createjs.Text('5/5','20px game','black');
+    let b = text.getBounds();
+    text.x = 100-(b.width/2);
+    text.y = 15-(b.height/2);
+    
+    let cont = new createjs.Container();
+    cont.addChild(rect);
+    cont.addChild(rect2);
+    cont.addChild(text);
+    
+    cont.y= 35;
+
     stage.addChild(cont);
     return cont
 }
@@ -603,7 +641,8 @@ function imagesLoaded(e) {
         }while(collisionDoor(walls.concat(doors),sprite)||collisionSprite(boxs,sprite));
     });
 
-    life = initText();
+    life = initLife();
+    shield = initShield();
     initPause();
     
 
@@ -676,7 +715,7 @@ function collisionRect(array, ref){
     let sprite = ref.getChildByName('hero');
     let index = array.find((el) => {
         if(rectCollision(el,sprite)){
-            if(el.currentAnimationFrame === 3){
+            if(el.currentFrame === 3){
                 ref.takeDamage(el.damage);
                 return true;
             }
