@@ -475,7 +475,7 @@ function initBox(x,y){
 function initChest(x,y){
     let chestss = new createjs.SpriteSheet({
         images:[af[CHEST]],
-        frames: {width:15,height:15,count:4},
+        frames: {width:30,height:15,count:4},
         animations:{
             close:0,
             open:{frames:[0,1,2,3],speed:0.1,next:false}
@@ -659,7 +659,7 @@ function imagesLoaded(e) {
         initPick((5+i)*15*scale,43*15*scale);
     }    
 
-    initChest(9*15*scale,40*15*scale);
+    initChest(8*15*scale,40*15*scale);
 
     initEnemie();
     initEnemie();
