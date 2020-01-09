@@ -13,6 +13,7 @@ let COSMO = 'assets/sprite/cosmo.png',
     LITTLEGROUND = 'assets/wall/little_ground.png',
     DOOR = 'assets/wall/door.png',
     BOX = 'assets/obstacle/box.png',
+    CHEST = 'assets/obstacle/chest.png',
     PICK = 'assets/obstacle/pick.png';
 
 
@@ -41,7 +42,7 @@ function init() {
     af.onComplete = function() {
         imagesLoaded();
     }
-    af.loadAssets([COSMO,GUN,FIRE,GOBELIN,WALL,GROUND,WAYWALL,WAYGROUND,LITTLEWALL,LITTLEGROUND,DOOR,BOX,BLOCK,PICK]);
+    af.loadAssets([COSMO,GUN,FIRE,GOBELIN,WALL,GROUND,WAYWALL,WAYGROUND,LITTLEWALL,LITTLEGROUND,DOOR,BOX,BLOCK,CHEST,PICK]);
 }
 
 function initStats(){
@@ -471,6 +472,22 @@ function initBox(x,y){
     boxs.push(box);
 }
 
+function initChest(x,y){
+    let chestss = new createjs.SpriteSheet({
+        images:[af[CHEST]],
+        frames: {width:15,height:15,count:4},
+        animations:{
+            close:0,
+            open:{frames:[0,1,2,3],speed:0.1,next:false}
+        }
+    });
+    let chest = new createjs.Sprite(chestss);
+    chest.gotoAndPlay('close');
+    chest.x = x;
+    chest.y = y;
+    room.addChild(chest);
+}
+
 function initPick(x,y){
     let pickss = new createjs.SpriteSheet({
         images:[af[PICK]],
@@ -633,39 +650,16 @@ function imagesLoaded(e) {
 
     initBlock(12*scale*15,16*scale*15);
 
-    initPick(4*15*scale,37*15*scale);
-    initPick(4*15*scale,38*15*scale);
-    initPick(4*15*scale,39*15*scale);
-    initPick(4*15*scale,40*15*scale);
-    initPick(4*15*scale,41*15*scale);
-    initPick(4*15*scale,42*15*scale);
-    initPick(4*15*scale,43*15*scale);
+    for(let i = 0; i<8; i++){
+        if(i<7){
+            initPick(4*15*scale,(37+i)*15*scale);
+            initPick(13*15*scale,(37+i)*15*scale);
+        }
+        initPick((5+i)*15*scale,37*15*scale);
+        initPick((5+i)*15*scale,43*15*scale);
+    }    
 
-    initPick(5*15*scale,37*15*scale);
-    initPick(6*15*scale,37*15*scale);
-    initPick(7*15*scale,37*15*scale);
-    initPick(8*15*scale,37*15*scale);
-    initPick(9*15*scale,37*15*scale);
-    initPick(10*15*scale,37*15*scale);
-    initPick(11*15*scale,37*15*scale);
-    initPick(12*15*scale,37*15*scale);
-
-    initPick(13*15*scale,37*15*scale);
-    initPick(13*15*scale,38*15*scale);
-    initPick(13*15*scale,39*15*scale);
-    initPick(13*15*scale,40*15*scale);
-    initPick(13*15*scale,41*15*scale);
-    initPick(13*15*scale,42*15*scale);
-    initPick(13*15*scale,43*15*scale);
-
-    initPick(5*15*scale,43*15*scale);
-    initPick(6*15*scale,43*15*scale);
-    initPick(7*15*scale,43*15*scale);
-    initPick(8*15*scale,43*15*scale);
-    initPick(9*15*scale,43*15*scale);
-    initPick(10*15*scale,43*15*scale);
-    initPick(11*15*scale,43*15*scale);
-    initPick(12*15*scale,43*15*scale);
+    initChest(9*15*scale,40*15*scale);
 
     initEnemie();
     initEnemie();
