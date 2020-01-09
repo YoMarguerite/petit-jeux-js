@@ -1,6 +1,6 @@
-var canvas, stage, af, hero, life, shield, heroes=[], enemies=[], balls=[], eballs=[], explodeBalls=[], boxs=[], picks=[], room, walls=[], doors=[], stats, scale;
-var finish = false;
-var COSMO = 'assets/sprite/cosmo.png',
+let canvas, stage, af, hero, life, shield, heroes=[], enemies=[], balls=[], eballs=[], explodeBalls=[], boxs=[], picks=[], room, walls=[], doors=[], stats, scale;
+let finish = false;
+let COSMO = 'assets/sprite/cosmo.png',
     GUN = 'assets/weapon/revolver/gun.png',
     FIRE = 'assets/weapon/revolver/fire.png',
     GOBELIN = 'assets/sprite/gobelin.png',
@@ -8,6 +8,7 @@ var COSMO = 'assets/sprite/cosmo.png',
     WALL = 'assets/wall/test.png',
     GROUND = 'assets/wall/ground.png',
     WAYWALL = 'assets/wall/way_wall.png',
+    WAYGROUND = 'assets/wall/way_ground.png',
     LITTLEWALL = 'assets/wall/little.png',
     LITTLEGROUND = 'assets/wall/little_ground.png',
     DOOR = 'assets/wall/door.png',
@@ -40,7 +41,7 @@ function init() {
     af.onComplete = function() {
         imagesLoaded();
     }
-    af.loadAssets([COSMO,GUN,FIRE,GOBELIN,WALL,GROUND,WAYWALL,LITTLEWALL,LITTLEGROUND,DOOR,BOX,BLOCK,PICK]);
+    af.loadAssets([COSMO,GUN,FIRE,GOBELIN,WALL,GROUND,WAYWALL,WAYGROUND,LITTLEWALL,LITTLEGROUND,DOOR,BOX,BLOCK,PICK]);
 }
 
 function initStats(){
@@ -58,7 +59,7 @@ function createPersoSS(images,x,y){
         animations:{
             head:{frames:[0,1],speed:0.15}, 
             move:{frames:[0,2],speed:0.15},
-            damage:{frames:[3],speed:0.2,next:"head"},
+            damage:{frames:[3],speed:0.15,next:"head"},
             dead:{frames:[4], next:false}
         }
     });
@@ -106,7 +107,7 @@ function initGun(perso){
         frames: {width:30,height:15,count:2,regX:4, regY:8},
         animations:{
             gun:{frames:[0],next:false},
-            shoot:{frames:[1],next:false},
+            shoot:{frames:[1],speed:0.15,next:'gun'},
         }
     });
 
@@ -132,11 +133,6 @@ function initHero(){
         this.rotation = Math.sign(y)*rotation(x,y);
     
         let tick = createjs.Ticker.getTime(true);
-        if(tick>(this.lastShoot+250)){
-            if(this.currentAnimation === 'shoot'){
-                this.gotoAndPlay('gun');
-            }
-        }
         if(boolDown){
             if(tick>(this.lastShoot+750)){
                 this.lastShoot = tick;
@@ -375,9 +371,14 @@ function initRoom(){
     let ground = new createjs.Bitmap(af[GROUND]);
     ground.name='ground';
     let wall = new createjs.Bitmap(af[WALL]);
+
+    let wayground = new createjs.Bitmap(af[WAYGROUND]);
+    wayground.x = 15*6*scale;
+    wayground.y = 15*25*scale-(6*scale);
     let waywall = new createjs.Bitmap(af[WAYWALL]);
     waywall.x = 15*6*scale;
     waywall.y = 15*25*scale-(6*scale);
+    
     let littleground = new createjs.Bitmap(af[LITTLEGROUND]);
     littleground.x = 0;
     littleground.y = 15*34*scale;
@@ -391,6 +392,7 @@ function initRoom(){
 
     room.addChild(ground);
     room.addChild(wall);  
+    room.addChild(wayground);
     room.addChild(waywall);
     room.addChild(littleground);
     room.addChild(littlewall);
@@ -472,16 +474,28 @@ function initBox(x,y){
 function initPick(x,y){
     let pickss = new createjs.SpriteSheet({
         images:[af[PICK]],
-        frames: {width:15,height:15,count:4},
+        frames: {width:15,height:15,count:3},
         animations:{
-            action:{frames:[0,1,2,3,2,1,0,0,0,0,0],speed:0.1}
+            open:{frames:[0,1,2],speed:0.1, next:'close'},
+            close:{frames:[2,1,0],speed:0.1, next:false}
         }
     });
     let pick = new createjs.Sprite(pickss);
-    pick.gotoAndPlay('action');
+    pick.gotoAndPlay('close');
     pick.x = x;
     pick.y = y;
     pick.damage = 1;
+    pick.touch = false;
+    pick.lastShoot = 0;
+    pick.move = function(){
+        let time = createjs.Ticker.getTime(true);
+        if(time > this.lastShoot+5000){
+            this.lastShoot = time;
+            this.touch = false;
+            this.gotoAndPlay('open');
+        }
+    };
+
     room.addChild(pick);
     picks.push(pick);
 }
@@ -619,10 +633,39 @@ function imagesLoaded(e) {
 
     initBlock(12*scale*15,16*scale*15);
 
-    initPick(3*15*scale,39*15*scale);
-    initPick(3*15*scale,40*15*scale);
+    initPick(4*15*scale,37*15*scale);
+    initPick(4*15*scale,38*15*scale);
     initPick(4*15*scale,39*15*scale);
     initPick(4*15*scale,40*15*scale);
+    initPick(4*15*scale,41*15*scale);
+    initPick(4*15*scale,42*15*scale);
+    initPick(4*15*scale,43*15*scale);
+
+    initPick(5*15*scale,37*15*scale);
+    initPick(6*15*scale,37*15*scale);
+    initPick(7*15*scale,37*15*scale);
+    initPick(8*15*scale,37*15*scale);
+    initPick(9*15*scale,37*15*scale);
+    initPick(10*15*scale,37*15*scale);
+    initPick(11*15*scale,37*15*scale);
+    initPick(12*15*scale,37*15*scale);
+
+    initPick(13*15*scale,37*15*scale);
+    initPick(13*15*scale,38*15*scale);
+    initPick(13*15*scale,39*15*scale);
+    initPick(13*15*scale,40*15*scale);
+    initPick(13*15*scale,41*15*scale);
+    initPick(13*15*scale,42*15*scale);
+    initPick(13*15*scale,43*15*scale);
+
+    initPick(5*15*scale,43*15*scale);
+    initPick(6*15*scale,43*15*scale);
+    initPick(7*15*scale,43*15*scale);
+    initPick(8*15*scale,43*15*scale);
+    initPick(9*15*scale,43*15*scale);
+    initPick(10*15*scale,43*15*scale);
+    initPick(11*15*scale,43*15*scale);
+    initPick(12*15*scale,43*15*scale);
 
     initEnemie();
     initEnemie();
@@ -660,10 +703,21 @@ function onTick(e) {
         
         stats.begin();
 
-        heroes.forEach((hero) =>{
-            collisionRect(picks,hero);
-            hero.move();
+        picks.forEach((pick) => {
+            pick.move();
+            heroes.forEach((heroe) => {
+                if(pick.currentAnimation == 'open'&&!pick.touch){
+                    if(rectCollision(heroe, pick)){
+                        pick.touch = true;
+                        heroe.takeDamage(pick.damage);
+                    }
+                }
+            });
         });
+
+        heroes.forEach((heroe) =>{
+            heroe.move();
+        })
 
         enemies.forEach((en) =>{
             en.move();
@@ -712,19 +766,6 @@ function ballFinish(ball){
     ball.gotoAndStop('shoot');
     ball.gotoAndPlay('explode');
     explodeBalls.push(ball);
-}
-
-function collisionRect(array, ref){
-    let sprite = ref.getChildByName('hero');
-    let index = array.find((el) => {
-        if(rectCollision(el,sprite)){
-            if(el.currentFrame === 3){
-                ref.takeDamage(el.damage);
-                return true;
-            }
-        }
-    })
-    return index;
 }
 
 function collisionSprite(array, ref){
