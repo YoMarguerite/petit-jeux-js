@@ -58,7 +58,7 @@ function createPersoSS(images,x,y){
         animations:{
             head:{frames:[0,1],speed:0.15}, 
             move:{frames:[0,2],speed:0.15},
-            damage:{frames:[3],speed:0.1,next:"head"},
+            damage:{frames:[3],speed:0.2,next:"head"},
             dead:{frames:[4], next:false}
         }
     });
@@ -162,7 +162,9 @@ function initHero(){
     cont.x = canvas.width/2;
     cont.y = canvas.height/2;
     cont.life = 5;
+    cont.lifemax = 5;
     cont.shield = 5;
+    cont.shieldmax = 5;
     cont.lastRecovery = 0;
     
     cont.move = function(){
@@ -170,9 +172,9 @@ function initHero(){
             if(createjs.Ticker.getTime(true)>this.lastRecovery){
                 this.lastRecovery = createjs.Ticker.getTime()+3000;
                 this.shield++;
-                shield.children[2].text = this.shield+'/5';
+                shield.children[2].text = this.shield+'/'+this.shieldmax;
                 let rect2 = new createjs.Shape();
-                rect2.graphics.beginFill("blue").drawRoundRect(0, 0, 200*(this.shield/5), 30,20);
+                rect2.graphics.beginFill("blue").drawRoundRect(0, 0, 200*(this.shield/this.shieldmax), 30,20);
                 shield.children[1] = rect2;
             }
         }
@@ -184,6 +186,7 @@ function initHero(){
     };
 
     cont.takeDamage = function(damage){
+        this.lastRecovery = createjs.Ticker.getTime()+3000;
         if(perso.currentAnimation !== 'damage'){
             this.shield -= damage;
             if(this.shield < 0){
@@ -199,14 +202,14 @@ function initHero(){
             
             perso.takeDamage(this.life);
     
-            life.children[2].text = this.life+'/5';
+            life.children[2].text = this.life+'/'+this.lifemax;
             let rect = new createjs.Shape();
-            rect.graphics.beginFill("red").drawRoundRect(0, 0, 200*(this.life/5), 30,20);
+            rect.graphics.beginFill("red").drawRoundRect(0, 0, 200*(this.life/this.lifemax), 30,20);
             life.children[1] = rect;
 
-            shield.children[2].text = this.shield+'/5';
+            shield.children[2].text = this.shield+'/'+this.shieldmax;
             let rect2 = new createjs.Shape();
-            rect2.graphics.beginFill("blue").drawRoundRect(0, 0, 200*(this.shield/5), 30,20);
+            rect2.graphics.beginFill("blue").drawRoundRect(0, 0, 200*(this.shield/this.shieldmax), 30,20);
             shield.children[1] = rect2;
         }
     };
