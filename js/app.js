@@ -1,4 +1,4 @@
-let canvas, stage, af, hero, life, shield, heroes=[], enemies=[], balls=[], eballs=[], explodeBalls=[], chests=[], boxs=[], picks=[], room, walls=[], doors=[], stats, scale;
+let canvas, stage, af, hero, life, shield, enemies=[], balls=[], eballs=[], explodeBalls=[], chests=[], boxs=[], picks=[], room, walls=[], doors=[], stats, scale;
 let finish = false;
 let COSMO = 'assets/sprite/cosmo.png',
     GUN = 'assets/weapon/revolver/gun.png',
@@ -191,8 +191,6 @@ function initHero(){
                 this.shield = 0;
                 if(this.life <= 0){
                     this.life = 0;
-                    let index = heroes.indexOf(this);
-                    heroes.splice(index,1);
                     this.removeChild(gun);
                 }
             }
@@ -214,7 +212,6 @@ function initHero(){
     let b = cont.getBounds();
     cont.setBounds(b.x,b.y,0,0);
     stage.addChild(cont);
-    heroes.push(cont);
     hero = cont;
     console.log(cont.getBounds());
 }
@@ -699,29 +696,23 @@ function onTick(e) {
 
         picks.forEach((pick) => {
             pick.move();
-            if(pick.currentAnimation == 'open'&&!pick.touch){
-                heroes.forEach((hero) => {
-                    if(rectCollision(hero, pick)){
-                        pick.touch = true;
-                        hero.takeDamage(pick.damage);
-                    }
-                });
+            if(pick.currentFrame === 2&&!pick.touch){
+                if(rectCollision(hero, pick)){
+                    pick.touch = true;
+                    hero.takeDamage(pick.damage);
+                }
             }
         });
 
         chests.forEach((chest) => {
             if(chest.currentAnimation !== 'open'){
-                heroes.forEach((hero) => {
-                    if(rectCollision(hero, chest)){
-                        chest.gotoAndPlay('open');
-                    }
-                }); 
+                if(rectCollision(hero, chest)){
+                    chest.gotoAndPlay('open');
+                }
             }
         });
 
-        heroes.forEach((heroe) =>{
-            heroe.move();
-        })
+        hero.move();
 
         enemies.forEach((en) =>{
             en.move();
@@ -736,7 +727,7 @@ function onTick(e) {
 
         eballs = eballs.filter((ball) => {
             ball.move();
-            if(!collisionDoor(walls.concat(doors),ball)&&(!collisionSprite(boxs,ball))&&(!collisionContainer(heroes,ball))){
+            if(!collisionDoor(walls.concat(doors),ball)&&(!collisionSprite(boxs,ball))&&(!collisionHero(ball))){
                 return ball;
             }
             ballFinish(ball);
@@ -789,6 +780,17 @@ function collisionDoor(array, ref){
         return pixelCollision(el,ref,window.alphaThresh);
     })
     return (index);
+}
+
+function collisionHero(ref){
+    let sprite = hero.children[0];
+    if(pixelCollision(sprite,ref,window.alphaThresh)){
+        if(ref.damage){
+            hero.takeDamage(ref.damage);
+        }            
+        return true;
+    }
+    return false;
 }
 
 function collisionContainer(array, ref){
