@@ -1,4 +1,4 @@
-let canvas, stage, af, hero, life, shield, heroes=[], enemies=[], balls=[], eballs=[], explodeBalls=[], boxs=[], picks=[], room, walls=[], doors=[], stats, scale;
+let canvas, stage, af, hero, life, shield, heroes=[], enemies=[], balls=[], eballs=[], explodeBalls=[], chests=[], boxs=[], picks=[], room, walls=[], doors=[], stats, scale;
 let finish = false;
 let COSMO = 'assets/sprite/cosmo.png',
     GUN = 'assets/weapon/revolver/gun.png',
@@ -152,9 +152,9 @@ function initHero(){
     };
 
     var cont = new createjs.Container();
-    
     cont.addChild(perso);
     cont.addChild(gun);
+    
 
     cont.x = canvas.width/2;
     cont.y = canvas.height/2;
@@ -210,10 +210,13 @@ function initHero(){
             shield.children[1] = rect2;
         }
     };
-
+    
+    let b = cont.getBounds();
+    cont.setBounds(b.x,b.y,0,0);
     stage.addChild(cont);
     heroes.push(cont);
     hero = cont;
+    console.log(cont.getBounds());
 }
 
 function initBall(x,y,scaleX,scaleY,rotation,dx,dy,speed=20,damage = 1){
@@ -263,9 +266,6 @@ function initGobelin(){
             this.lastShoot = createjs.Ticker.getTime(true);
             this.gotoAndPlay('damage');
         }
-    };
-
-    gobelin.move = function(){
     };
     
     return gobelin;
@@ -358,7 +358,6 @@ function initEnemie(){
             let index = enemies.indexOf(this);
             enemies.splice(index,1);
             this.removeChild(this.children[1]);
-            room.setChildIndex(this,14);
         }
         gobelin.takeDamage(this.life);
     };
@@ -486,6 +485,7 @@ function initChest(x,y){
     chest.x = x;
     chest.y = y;
     room.addChild(chest);
+    chests.push(chest);
 }
 
 function initPick(x,y){
@@ -699,14 +699,24 @@ function onTick(e) {
 
         picks.forEach((pick) => {
             pick.move();
-            heroes.forEach((heroe) => {
-                if(pick.currentAnimation == 'open'&&!pick.touch){
-                    if(rectCollision(heroe, pick)){
+            if(pick.currentAnimation == 'open'&&!pick.touch){
+                heroes.forEach((hero) => {
+                    if(rectCollision(hero, pick)){
                         pick.touch = true;
-                        heroe.takeDamage(pick.damage);
+                        hero.takeDamage(pick.damage);
                     }
-                }
-            });
+                });
+            }
+        });
+
+        chests.forEach((chest) => {
+            if(chest.currentAnimation !== 'open'){
+                heroes.forEach((hero) => {
+                    if(rectCollision(hero, chest)){
+                        chest.gotoAndPlay('open');
+                    }
+                }); 
+            }
         });
 
         heroes.forEach((heroe) =>{
