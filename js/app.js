@@ -161,21 +161,23 @@ function initHero(){
     cont.lastRecovery = 0;
     
     cont.move = function(){
-        if(this.shield < 5){
-            if(createjs.Ticker.getTime(true)>this.lastRecovery){
-                this.lastRecovery = createjs.Ticker.getTime()+3000;
-                this.shield++;
-                shield.children[2].text = this.shield+'/'+this.shieldmax;
-                let rect2 = new createjs.Shape();
-                rect2.graphics.beginFill("blue").drawRoundRect(0, 0, 200*(this.shield/this.shieldmax), 30,20);
-                shield.children[1] = rect2;
+        if(this.life > 0){
+            if(this.shield < 5){
+                if(createjs.Ticker.getTime(true)>this.lastRecovery){
+                    this.lastRecovery = createjs.Ticker.getTime()+3000;
+                    this.shield++;
+                    shield.children[2].text = this.shield+'/'+this.shieldmax;
+                    let rect2 = new createjs.Shape();
+                    rect2.graphics.beginFill("blue").drawRoundRect(0, 0, 200*(this.shield/this.shieldmax), 30,20);
+                    shield.children[1] = rect2;
+                }
             }
+            this.scaleX = stage.mouseX < this.x ? -this.scaleY : this.scaleY;
+            this.children.forEach((child) => {
+                child.move();
+            });
+            room.move();
         }
-        this.scaleX = stage.mouseX < this.x ? -this.scaleY : this.scaleY;
-        this.children.forEach((child) => {
-            child.move();
-        });
-        room.move();
     };
 
     cont.takeDamage = function(damage){
@@ -306,6 +308,8 @@ function initEnemie(){
     cont.speed = 3;
     cont.lastMove = 0;
     cont.lapsMove = 0;
+    let wall = room.getChildByName('wall');
+    let door = room.getChildByName('door');
     cont.move = function(){
         let coef = Math.sign(hero.x-(room.x-(this.regX*this.scaleX)+this.x));
         this.children.forEach((child) => {
@@ -393,11 +397,13 @@ function initRoom(){
         }
         
         this.x += x;
+
+        let door = room.getChildByName('door');
         if(collision(wall,ref)||collision(door,ref)||(collisionSprite(boxs,ref))){
             this.x -= x;
         }
         this.y += y;
-        if(collisionDoor(wall,ref)||collision(door,ref)||(collisionSprite(boxs,ref))){
+        if(collision(wall,ref)||collision(door,ref)||(collisionSprite(boxs,ref))){
             this.y -= y;
         }
     };
@@ -494,7 +500,7 @@ function initDoor(x,y){
     let width=60, height=25;
     let ss = new createjs.SpriteSheet({
         images:[af[DOOR]],
-        frames: {width:width, height:height, count:4, regX:width/2, regY:height/2}, 
+        frames: {width:width, height:height, count:4}, 
         animations:{
             close:{frames:[0],next:false}, 
             opening:{frames:[0,1,2,3],speed:0.1, next:false},
@@ -503,13 +509,12 @@ function initDoor(x,y){
     });
 
     let door = new createjs.Sprite(ss);
-    door.gotoAndPlay('opening');
+    door.gotoAndPlay('close');
     door.name = 'door';
     door.x = x;
     door.y = y;
 
     room.addChild(door)
-    doors.push(door);
 }
 
 function initLife(){
@@ -602,17 +607,17 @@ function imagesLoaded(e) {
     initRoom();
     initStats();
     initHero();
-    initDoor(15*9*scale,358*scale);
+    initDoor(15*7*scale,15*4*scale);
 
-    initBlock(4*scale*15,5*scale*15);
+    initBlock(4*scale*15,15*10*scale);
 
-    initBox(4*scale*15,6*scale*15);
-    initBox(5*scale*15,6*scale*15);
+    initBox(4*scale*15,15*9*scale);
+    initBox(5*scale*15,15*9*scale);
 
-    initBox(4*scale*15,7*scale*15);
-    initBox(5*scale*15,7*scale*15);
+    initBox(4*scale*15,15*8*scale);
+    initBox(5*scale*15,15*8*scale);
 
-    initBlock(12*scale*15,5*scale*15);
+    initBlock(12*scale*15,15*10*scale);
 
     initBox(12*scale*15,4*scale*15);
     initBox(13*scale*15,4*scale*15);
@@ -620,9 +625,9 @@ function imagesLoaded(e) {
     initBox(12*scale*15,3*scale*15);
     initBox(13*scale*15,3*scale*15);
 
-    initBlock(4*scale*15,16*scale*15);
+    initBlock(4*scale*15,15*scale*15);
 
-    initBlock(12*scale*15,16*scale*15);
+    initBlock(12*scale*15,15*scale*15);
 
     initEnemie();
     initEnemie();
@@ -686,10 +691,11 @@ function onTick(e) {
             en.move();
         })
 
+        let door = room.getChildByName('door');
+        let wall = room.getChildByName('wall');
+
         if((enemies.length === 0)&&(!finish)){
-            doors.forEach((door)=>{
-                door.gotoAndPlay('opening');
-            })
+            door.gotoAndPlay('opening');
             finish = true;
         }
 
